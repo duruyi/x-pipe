@@ -1,13 +1,18 @@
 package com.ctrip.xpipe.redis.checker;
 
+import com.ctrip.xpipe.api.email.EmailResponse;
+import com.ctrip.xpipe.api.server.Server;
+import com.ctrip.xpipe.redis.checker.alert.AlertMessageEntity;
+import com.ctrip.xpipe.redis.checker.healthcheck.RedisHealthCheckInstance;
 import com.ctrip.xpipe.redis.checker.model.CheckerStatus;
 import com.ctrip.xpipe.redis.checker.model.HealthCheckResult;
 import com.ctrip.xpipe.redis.checker.model.ProxyTunnelInfo;
 import com.ctrip.xpipe.redis.core.entity.XpipeMeta;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author lishanglin
@@ -22,5 +27,56 @@ public interface CheckerConsoleService {
     void ack(String console, CheckerStatus checkerStatus);
 
     void report(String console, HealthCheckResult result);
+    
+    boolean isClusterOnMigration(String console, String clusterId);
 
+    void updateRedisRole(String console, RedisHealthCheckInstance instance, Server.SERVER_ROLE role);
+    
+    Set<String> sentinelCheckWhiteList(String console);
+
+    Set<String> clusterAlertWhiteList(String console);
+
+    boolean isSentinelAutoProcess(String console);
+
+    boolean isAlertSystemOn(String console);
+
+    Date getClusterCreateTime(String console, String clusterId);
+    
+    Map<String, Date> loadAllClusterCreateTime(String console);
+
+    public class AlertMessage {
+        AlertMessageEntity message;
+        Properties properties;
+
+        public AlertMessage() {
+
+        }
+        public AlertMessage(AlertMessageEntity message, EmailResponse response) {
+            this.message = message;
+            this.properties = response.getProperties();
+        }
+
+        public AlertMessageEntity getMessage() {
+            return message;
+        }
+        @JsonIgnore
+        public EmailResponse getEmailResponse() {
+            return new EmailResponse() {
+                @Override
+                public Properties getProperties() {
+                    return properties;
+                }
+            };
+        }
+
+        public void setMessage(AlertMessageEntity message) {
+            this.message = message;
+        }
+
+        public void setProperties(Properties properties) {
+            this.properties = properties;
+        }
+    }
+    
+    void recordAlert(String console, AlertMessageEntity message, EmailResponse response);
 }

@@ -3,7 +3,7 @@ package com.ctrip.xpipe.redis.checker.alert.sender.email;
 import com.ctrip.xpipe.api.command.CommandFuture;
 import com.ctrip.xpipe.api.email.EmailResponse;
 import com.ctrip.xpipe.api.email.EmailService;
-import com.ctrip.xpipe.redis.checker.Persistence;
+import com.ctrip.xpipe.redis.checker.PersistenceCache;
 import com.ctrip.xpipe.redis.checker.alert.AlertMessageEntity;
 import com.ctrip.xpipe.redis.checker.alert.sender.AbstractSender;
 import com.ctrip.xpipe.redis.checker.alert.sender.email.listener.AsyncEmailSenderCallback;
@@ -39,7 +39,7 @@ public class AsyncEmailSender extends AbstractSender {
     private ExecutorService executor;
 
     @Autowired
-    private Persistence persistence;
+    private PersistenceCache persistenceCache;
 
     @Override
     public String getId() {
@@ -56,7 +56,7 @@ public class AsyncEmailSender extends AbstractSender {
         CommandFuture<EmailResponse> future = EmailService.DEFAULT.sendEmailAsync(createEmail(message), executor);
         future.addListener(commandFuture -> {
             EmailResponse response = commandFuture.getNow();
-            persistence.recordAlert(message, response);
+            persistenceCache.recordAlert(message, response);
         });
         if(future.isDone() && !future.isSuccess()) {
             callbackFunction.fail(future.cause());

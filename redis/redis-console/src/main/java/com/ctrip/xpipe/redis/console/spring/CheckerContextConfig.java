@@ -10,25 +10,25 @@ import com.ctrip.xpipe.redis.checker.healthcheck.actions.interaction.HealthState
 import com.ctrip.xpipe.redis.checker.healthcheck.actions.ping.DefaultPingService;
 import com.ctrip.xpipe.redis.checker.healthcheck.actions.ping.PingService;
 import com.ctrip.xpipe.redis.checker.impl.*;
+import com.ctrip.xpipe.redis.checker.spring.ConsoleServerMode;
+import com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition;
 import com.ctrip.xpipe.redis.console.config.ConsoleConfig;
+import com.ctrip.xpipe.redis.console.config.impl.DefaultConsoleConfig;
 import com.ctrip.xpipe.redis.console.dao.MigrationClusterDao;
 import com.ctrip.xpipe.redis.console.dao.MigrationEventDao;
 import com.ctrip.xpipe.redis.console.dao.MigrationShardDao;
+import com.ctrip.xpipe.redis.console.healthcheck.meta.DcIgnoredConfigChangeListener;
 import com.ctrip.xpipe.redis.console.migration.auto.DefaultBeaconManager;
 import com.ctrip.xpipe.redis.console.migration.auto.DefaultMonitorServiceManager;
 import com.ctrip.xpipe.redis.console.migration.auto.MonitorServiceManager;
 import com.ctrip.xpipe.redis.console.redis.DefaultSentinelManager;
 import com.ctrip.xpipe.redis.console.resources.CheckerMetaCache;
-import com.ctrip.xpipe.redis.console.config.impl.DefaultConsoleConfig;
-import com.ctrip.xpipe.redis.console.healthcheck.meta.DcIgnoredConfigChangeListener;
-import com.ctrip.xpipe.redis.console.resources.DefaultPersistence;
+import com.ctrip.xpipe.redis.console.resources.CheckerPersistenceCache;
 import com.ctrip.xpipe.redis.console.service.DcClusterShardService;
 import com.ctrip.xpipe.redis.console.service.impl.AlertEventService;
 import com.ctrip.xpipe.redis.console.service.impl.DcClusterShardServiceImpl;
 import com.ctrip.xpipe.redis.console.service.meta.BeaconMetaService;
 import com.ctrip.xpipe.redis.console.service.meta.impl.BeaconMetaServiceImpl;
-import com.ctrip.xpipe.redis.checker.spring.ConsoleServerMode;
-import com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition;
 import com.ctrip.xpipe.redis.console.util.DefaultMetaServerConsoleServiceManagerWrapper;
 import com.ctrip.xpipe.redis.core.meta.MetaCache;
 import com.ctrip.xpipe.spring.AbstractProfile;
@@ -38,6 +38,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 
 import static com.ctrip.xpipe.spring.AbstractSpringConfigContext.GLOBAL_EXECUTOR;
 
@@ -57,8 +58,8 @@ public class CheckerContextConfig {
     }
 
     @Bean(autowire = Autowire.BY_TYPE)
-    public Persistence persistence() {
-        return new DefaultPersistence();
+    public PersistenceCache persistence(CheckerConfig checkerConfig, CheckerConsoleService checkerConsoleService, ScheduledExecutorService scheduled) {
+        return new CheckerPersistenceCache(checkerConfig, checkerConsoleService, scheduled);
     }
 
     @Bean
@@ -84,8 +85,8 @@ public class CheckerContextConfig {
     }
 
     @Bean
-    public CheckerDbConfig checkerDbConfig(Persistence persistence, CheckerConfig config) {
-        return new DefaultCheckerDbConfig(persistence, config);
+    public CheckerDbConfig checkerDbConfig(PersistenceCache persistenceCache, CheckerConfig config) {
+        return new DefaultCheckerDbConfig(persistenceCache, config);
     }
 
     @Bean

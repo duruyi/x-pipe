@@ -14,7 +14,7 @@ import java.util.Set;
  * @author lishanglin
  * date 2021/3/14
  */
-public class TestPersistence implements Persistence {
+public class TestPersistenceCache implements PersistenceCache {
 
     private Set<String> sentinelCheckWhiteList = new HashSet<>();
 

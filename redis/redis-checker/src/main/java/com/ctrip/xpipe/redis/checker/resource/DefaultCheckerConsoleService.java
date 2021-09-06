@@ -1,6 +1,12 @@
 package com.ctrip.xpipe.redis.checker.resource;
 
+import com.ctrip.xpipe.api.email.EmailResponse;
+import com.ctrip.xpipe.api.server.Server;
 import com.ctrip.xpipe.redis.checker.CheckerConsoleService;
+import com.ctrip.xpipe.redis.checker.PersistenceCache;
+import com.ctrip.xpipe.redis.checker.alert.AlertMessageEntity;
+import com.ctrip.xpipe.redis.checker.config.CheckerConfig;
+import com.ctrip.xpipe.redis.checker.healthcheck.RedisHealthCheckInstance;
 import com.ctrip.xpipe.redis.checker.model.CheckerStatus;
 import com.ctrip.xpipe.redis.checker.model.HealthCheckResult;
 import com.ctrip.xpipe.redis.checker.model.ProxyTunnelInfo;
@@ -10,6 +16,8 @@ import com.ctrip.xpipe.redis.core.service.AbstractService;
 import com.ctrip.xpipe.redis.core.transform.DefaultSaxParser;
 import com.ctrip.xpipe.utils.StringUtil;
 import com.ctrip.xpipe.utils.VisibleForTesting;
+import com.google.common.collect.Maps;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -21,7 +29,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author lishanglin
@@ -30,7 +41,7 @@ import java.util.List;
 @Lazy
 @Component
 public class DefaultCheckerConsoleService extends AbstractService implements CheckerConsoleService {
-
+    
     private static final ParameterizedTypeReference<List<ProxyTunnelInfo>> proxyTunnelInfosTypeDef = new ParameterizedTypeReference<List<ProxyTunnelInfo>>(){};
 
     public XpipeMeta getXpipeMeta(String console, int clusterPartIndex) throws SAXException, IOException {
@@ -64,4 +75,56 @@ public class DefaultCheckerConsoleService extends AbstractService implements Che
         this.restTemplate = restOperations;
     }
 
+    @Override
+    public boolean isClusterOnMigration(String console, String clusterId) {
+        return restTemplate.getForObject(console + ConsoleCheckerPath.PATH_GET_IS_CLUSTER_ON_MIGRATION + "/" + clusterId, Boolean.class);
+    }
+
+    @Override
+    public void updateRedisRole(String console, RedisHealthCheckInstance instance, Server.SERVER_ROLE role) {
+        UriComponents comp = UriComponentsBuilder.fromHttpUrl(console + ConsoleCheckerPath.PATH_PUT_UPDATE_REDIS_ROLE)
+                .buildAndExpand(role.toString());
+        restTemplate.put(comp.toString() , instance.getCheckInfo());
+    }
+
+    @Override
+    public Set<String> sentinelCheckWhiteList(String console) {
+        return restTemplate.getForObject(console + ConsoleCheckerPath.PATH_GET_SENTINEL_CHECKER_WHITE_LIST, Set.class);
+    }
+
+    @Override
+    public Set<String> clusterAlertWhiteList(String console) {
+        return restTemplate.getForObject(console + ConsoleCheckerPath.PATH_GET_CLUSTER_ALERT_WHITE_LIST, Set.class);
+    }
+
+    @Override
+    public boolean isSentinelAutoProcess(String console) {
+        return restTemplate.getForObject(console + ConsoleCheckerPath.PATH_GET_IS_SENTINEL_AUTO_PROCESS, Boolean.class);
+    }
+
+    @Override
+    public boolean isAlertSystemOn(String console) {
+        return restTemplate.getForObject(console + ConsoleCheckerPath.PATH_GET_IS_ALERT_SYSTEM_ON, Boolean.class);
+    }
+
+    @Override
+    public Date getClusterCreateTime(String console, String clusterId) {
+        Long time = restTemplate.getForObject(console + ConsoleCheckerPath.PATH_GET_CLUSTER_CREATE_TIME, Long.class);
+        return new Date(time);
+    }
+
+    @Override
+    public Map<String, Date> loadAllClusterCreateTime(String console) {
+        Map<String, Long> times = restTemplate.getForObject(console + ConsoleCheckerPath.PATH_GET_LOAD_ALL_CLUSTER_CREATE_TIME, Map.class);
+        Map<String, Date> dates = Maps.newConcurrentMap();
+        times.entrySet().stream().forEach(entry -> {
+            dates.put(entry.getKey(), new Date(entry.getValue()));
+        });
+        return dates;
+    }
+    
+    @Override
+    public void recordAlert(String console, AlertMessageEntity message, EmailResponse response) {
+        restTemplate.postForObject(console + ConsoleCheckerPath.PATH_POST_RECORD_ALERT, new AlertMessage(message, response), String.class);
+    }
 }

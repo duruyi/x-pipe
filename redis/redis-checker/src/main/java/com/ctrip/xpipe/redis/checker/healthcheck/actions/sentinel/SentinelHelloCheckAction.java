@@ -4,7 +4,7 @@ import com.ctrip.xpipe.api.monitor.Task;
 import com.ctrip.xpipe.api.monitor.TransactionMonitor;
 import com.ctrip.xpipe.concurrent.AbstractExceptionLogTask;
 import com.ctrip.xpipe.endpoint.HostPort;
-import com.ctrip.xpipe.redis.checker.Persistence;
+import com.ctrip.xpipe.redis.checker.PersistenceCache;
 import com.ctrip.xpipe.redis.checker.config.CheckerDbConfig;
 import com.ctrip.xpipe.redis.checker.healthcheck.*;
 import com.ctrip.xpipe.redis.checker.healthcheck.leader.AbstractLeaderAwareHealthCheckAction;
@@ -42,7 +42,7 @@ public class SentinelHelloCheckAction extends AbstractLeaderAwareHealthCheckActi
 
     private CheckerDbConfig checkerDbConfig;
 
-    private Persistence persistence;
+    private PersistenceCache persistenceCache;
 
     public static final String LOG_TITLE = "SentinelHelloCollect";
 
@@ -55,10 +55,10 @@ public class SentinelHelloCheckAction extends AbstractLeaderAwareHealthCheckActi
     private volatile boolean collecting = false;
 
     public SentinelHelloCheckAction(ScheduledExecutorService scheduled, ClusterHealthCheckInstance instance,
-                                    ExecutorService executors, CheckerDbConfig checkerDbConfig, Persistence persistence, MetaCache metaCache, HealthCheckInstanceManager instanceManager) {
+                                    ExecutorService executors, CheckerDbConfig checkerDbConfig, PersistenceCache persistenceCache, MetaCache metaCache, HealthCheckInstanceManager instanceManager) {
         super(scheduled, instance, executors);
         this.checkerDbConfig = checkerDbConfig;
-        this.persistence = persistence;
+        this.persistenceCache = persistenceCache;
         this.metaCache = metaCache;
         this.instanceManager= instanceManager;
     }
@@ -230,7 +230,7 @@ public class SentinelHelloCheckAction extends AbstractLeaderAwareHealthCheckActi
             return false;
         }
 
-        if (persistence.isClusterOnMigration(cluster)) {
+        if (persistenceCache.isClusterOnMigration(cluster)) {
             logger.warn("[{}][{}] in migration, stop check", LOG_TITLE, cluster);
             return false;
         }

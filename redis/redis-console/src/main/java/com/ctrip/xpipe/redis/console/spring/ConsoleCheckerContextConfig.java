@@ -1,10 +1,14 @@
 package com.ctrip.xpipe.redis.console.spring;
 
+import com.ctrip.xpipe.redis.checker.PersistenceCache;
+import com.ctrip.xpipe.redis.checker.config.CheckerConfig;
 import com.ctrip.xpipe.redis.checker.healthcheck.actions.ping.DefaultPingService;
 import com.ctrip.xpipe.redis.checker.impl.CheckerRedisInfoManager;
 import com.ctrip.xpipe.redis.checker.spring.ConsoleServerMode;
 import com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition;
 import com.ctrip.xpipe.redis.console.healthcheck.meta.DcIgnoredConfigChangeListener;
+import com.ctrip.xpipe.redis.console.resources.DefaultPersistence;
+import com.ctrip.xpipe.redis.console.resources.DefaultPersistenceCache;
 import com.ctrip.xpipe.redis.console.service.RedisInfoService;
 import com.ctrip.xpipe.redis.console.service.impl.DefaultRedisInfoService;
 import org.springframework.boot.web.servlet.ServletComponentScan;
@@ -12,6 +16,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * @author lishanglin
@@ -43,5 +49,10 @@ public class ConsoleCheckerContextConfig extends ConsoleContextConfig {
     @Override
     public RedisInfoService redisInfoService() {
         return new DefaultRedisInfoService();
+    }
+    
+    @Bean 
+    public PersistenceCache persistence(CheckerConfig checkerConfig, ScheduledExecutorService scheduled) {
+        return new DefaultPersistenceCache(checkerConfig, scheduled);
     }
 }

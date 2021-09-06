@@ -2,6 +2,8 @@ package com.ctrip.xpipe.redis.console.spring;
 
 import com.ctrip.xpipe.api.sso.LogoutHandler;
 import com.ctrip.xpipe.api.sso.UserInfoHolder;
+import com.ctrip.xpipe.redis.checker.PersistenceCache;
+import com.ctrip.xpipe.redis.checker.config.CheckerConfig;
 import com.ctrip.xpipe.redis.checker.healthcheck.actions.ping.PingService;
 import com.ctrip.xpipe.redis.checker.impl.TestMetaCache;
 import com.ctrip.xpipe.redis.checker.spring.ConsoleServerMode;
@@ -14,6 +16,7 @@ import com.ctrip.xpipe.redis.console.config.impl.DefaultConsoleDbConfig;
 import com.ctrip.xpipe.redis.console.healthcheck.nonredis.cluster.ClusterHealthMonitorManager;
 import com.ctrip.xpipe.redis.console.healthcheck.nonredis.cluster.impl.DefaultClusterHealthMonitorManager;
 import com.ctrip.xpipe.redis.console.resources.DefaultMetaCache;
+import com.ctrip.xpipe.redis.console.resources.DefaultPersistenceCache;
 import com.ctrip.xpipe.redis.console.service.RedisInfoService;
 import com.ctrip.xpipe.redis.console.service.impl.ConsoleCachedPingService;
 import com.ctrip.xpipe.redis.console.service.impl.ConsoleRedisInfoService;
@@ -25,6 +28,8 @@ import com.ctrip.xpipe.spring.AbstractProfile;
 import org.springframework.boot.context.embedded.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.context.annotation.*;
+
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * @author shyin
@@ -117,4 +122,8 @@ public class ConsoleContextConfig {
 		return new DefaultCrossMasterDelayService();
 	}
 
+	@Bean
+	public PersistenceCache persistence(CheckerConfig checkerConfig, ScheduledExecutorService scheduled) {
+		return new DefaultPersistenceCache(checkerConfig, scheduled);
+	}
 }

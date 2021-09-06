@@ -28,7 +28,6 @@ public class TimeBoundCache<T> {
         if (!disableCache && null != data && expiredAt > System.currentTimeMillis()) {
             return data;
         }
-
         this.data = dataSupplier.get();
         this.expiredAt = System.currentTimeMillis() + timeoutMillSupplier.getAsLong();
         return this.data;

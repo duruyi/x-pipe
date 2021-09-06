@@ -9,12 +9,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * @author lishanglin
- * date 2021/3/9
- */
-public interface Persistence {
-
+public interface PersistenceCache {
     boolean isClusterOnMigration(String clusterId);
 
     void updateRedisRole(RedisHealthCheckInstance instance, Server.SERVER_ROLE role);
@@ -32,5 +27,4 @@ public interface Persistence {
     Map<String, Date> loadAllClusterCreateTime();
 
     void recordAlert(AlertMessageEntity message, EmailResponse response);
-
 }

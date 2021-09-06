@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>xpipe-parent</artifactId>
+        <groupId>com.ctrip.framework.xpipe</groupId>
+        <version>1.2.6</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>latte_test</artifactId>
+    <dependencies>
+        <dependency>
+            <groupId>com.ctrip.framework.xpipe.redis</groupId>
+            <artifactId>redis-proxy-client</artifactId>
+            <version>1.2.6</version>
+            <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.alibaba.arthas</groupId>
+                    <artifactId>arthas-repackage-asm</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.alibaba.arthas</groupId>
+                    <artifactId>arthas-repackage-logger</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+    </dependencies>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+    </properties>
+
+</project>

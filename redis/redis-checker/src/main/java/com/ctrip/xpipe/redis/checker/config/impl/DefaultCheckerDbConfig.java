@@ -1,6 +1,6 @@
 package com.ctrip.xpipe.redis.checker.config.impl;
 
-import com.ctrip.xpipe.redis.checker.Persistence;
+import com.ctrip.xpipe.redis.checker.PersistenceCache;
 import com.ctrip.xpipe.redis.checker.alert.AlertDbConfig;
 import com.ctrip.xpipe.redis.checker.cache.TimeBoundCache;
 import com.ctrip.xpipe.redis.checker.config.CheckerConfig;
@@ -18,44 +18,39 @@ import java.util.stream.Collectors;
  */
 public class DefaultCheckerDbConfig implements CheckerDbConfig, AlertDbConfig {
 
-    private Persistence persistence;
+    private PersistenceCache persistenceCache;
 
     private TimeBoundCache<Set<String>> sentinelCheckWhiteListCache;
-
-    private TimeBoundCache<Boolean> sentinelAutoProcessCache;
-
-    private TimeBoundCache<Boolean> alertSystemOn;
+    
 
     private TimeBoundCache<Set<String>> clusterAlertWhiteListCache;
 
-    public DefaultCheckerDbConfig(Persistence persistence, LongSupplier timeoutMilliSupplier) {
-        this.persistence = persistence;
-
-        alertSystemOn = new TimeBoundCache<>(timeoutMilliSupplier, this.persistence::isAlertSystemOn);
-        sentinelAutoProcessCache = new TimeBoundCache<>(timeoutMilliSupplier, this.persistence::isSentinelAutoProcess);
+    public DefaultCheckerDbConfig(PersistenceCache persistenceCache, LongSupplier timeoutMilliSupplier) {
+        this.persistenceCache = persistenceCache;
         sentinelCheckWhiteListCache = new TimeBoundCache<>(timeoutMilliSupplier,
-                () -> this.lowCaseClusters(persistence.sentinelCheckWhiteList()));
+                () -> this.lowCaseClusters(persistenceCache.sentinelCheckWhiteList()));
         clusterAlertWhiteListCache = new TimeBoundCache<>(timeoutMilliSupplier,
-                () -> this.lowCaseClusters(persistence.clusterAlertWhiteList()));
+                () -> this.lowCaseClusters(persistenceCache.clusterAlertWhiteList()));
     }
+    
 
     private Set<String> lowCaseClusters(Set<String> clusters) {
         return clusters.stream().map(String::toLowerCase).collect(Collectors.toSet());
     }
 
     @Autowired
-    public DefaultCheckerDbConfig(Persistence persistence, CheckerConfig config) {
+    public DefaultCheckerDbConfig(PersistenceCache persistence, CheckerConfig config) {
         this(persistence, config::getConfigCacheTimeoutMilli);
     }
 
     @Override
     public boolean isAlertSystemOn() {
-        return alertSystemOn.getData(false);
+        return persistenceCache.isAlertSystemOn();
     }
 
     @Override
     public boolean isSentinelAutoProcess() {
-        return sentinelAutoProcessCache.getData(false);
+        return persistenceCache.isSentinelAutoProcess();
     }
 
     @Override
@@ -68,7 +63,7 @@ public class DefaultCheckerDbConfig implements CheckerDbConfig, AlertDbConfig {
 
     @Override
     public Set<String> sentinelCheckWhiteList() {
-        return sentinelCheckWhiteListCache.getData(false);
+        return this.sentinelCheckWhiteListCache.getData(true);
     }
 
     @Override
@@ -81,6 +76,6 @@ public class DefaultCheckerDbConfig implements CheckerDbConfig, AlertDbConfig {
 
     @Override
     public Set<String> clusterAlertWhiteList() {
-        return clusterAlertWhiteListCache.getData(false);
+        return clusterAlertWhiteListCache.getData(true);
     }
 }

@@ -20,27 +20,9 @@ public class DefaultCheckerDbConfig implements CheckerDbConfig, AlertDbConfig {
 
     private PersistenceCache persistenceCache;
 
-    private TimeBoundCache<Set<String>> sentinelCheckWhiteListCache;
-    
-
-    private TimeBoundCache<Set<String>> clusterAlertWhiteListCache;
-
-    public DefaultCheckerDbConfig(PersistenceCache persistenceCache, LongSupplier timeoutMilliSupplier) {
-        this.persistenceCache = persistenceCache;
-        sentinelCheckWhiteListCache = new TimeBoundCache<>(timeoutMilliSupplier,
-                () -> this.lowCaseClusters(persistenceCache.sentinelCheckWhiteList()));
-        clusterAlertWhiteListCache = new TimeBoundCache<>(timeoutMilliSupplier,
-                () -> this.lowCaseClusters(persistenceCache.clusterAlertWhiteList()));
-    }
-    
-
-    private Set<String> lowCaseClusters(Set<String> clusters) {
-        return clusters.stream().map(String::toLowerCase).collect(Collectors.toSet());
-    }
-
     @Autowired
-    public DefaultCheckerDbConfig(PersistenceCache persistence, CheckerConfig config) {
-        this(persistence, config::getConfigCacheTimeoutMilli);
+    public DefaultCheckerDbConfig(PersistenceCache persistenceCache) {
+        this.persistenceCache = persistenceCache;
     }
 
     @Override
@@ -63,7 +45,7 @@ public class DefaultCheckerDbConfig implements CheckerDbConfig, AlertDbConfig {
 
     @Override
     public Set<String> sentinelCheckWhiteList() {
-        return this.sentinelCheckWhiteListCache.getData(true);
+        return this.persistenceCache.sentinelCheckWhiteList();
     }
 
     @Override
@@ -76,6 +58,6 @@ public class DefaultCheckerDbConfig implements CheckerDbConfig, AlertDbConfig {
 
     @Override
     public Set<String> clusterAlertWhiteList() {
-        return clusterAlertWhiteListCache.getData(true);
+        return this.persistenceCache.clusterAlertWhiteList();
     }
 }

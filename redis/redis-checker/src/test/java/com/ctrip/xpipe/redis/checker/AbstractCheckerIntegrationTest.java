@@ -74,7 +74,7 @@ public class AbstractCheckerIntegrationTest extends AbstractCheckerTest {
 
         @Bean
         public CheckerDbConfig checkerDbConfig(PersistenceCache persistenceCache) {
-            return new DefaultCheckerDbConfig(persistenceCache, () -> 0L);
+            return new DefaultCheckerDbConfig(persistenceCache);
         }
 
         @Bean

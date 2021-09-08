@@ -13,11 +13,16 @@ import com.ctrip.xpipe.redis.console.config.ConsoleConfig;
 import com.ctrip.xpipe.redis.console.config.ConsoleDbConfig;
 import com.ctrip.xpipe.redis.console.config.impl.DefaultConsoleConfig;
 import com.ctrip.xpipe.redis.console.config.impl.DefaultConsoleDbConfig;
+import com.ctrip.xpipe.redis.console.dao.ClusterDao;
+import com.ctrip.xpipe.redis.console.dao.ConfigDao;
+import com.ctrip.xpipe.redis.console.dao.RedisDao;
 import com.ctrip.xpipe.redis.console.healthcheck.nonredis.cluster.ClusterHealthMonitorManager;
 import com.ctrip.xpipe.redis.console.healthcheck.nonredis.cluster.impl.DefaultClusterHealthMonitorManager;
 import com.ctrip.xpipe.redis.console.resources.DefaultMetaCache;
 import com.ctrip.xpipe.redis.console.resources.DefaultPersistenceCache;
+import com.ctrip.xpipe.redis.console.service.DcClusterShardService;
 import com.ctrip.xpipe.redis.console.service.RedisInfoService;
+import com.ctrip.xpipe.redis.console.service.impl.AlertEventService;
 import com.ctrip.xpipe.redis.console.service.impl.ConsoleCachedPingService;
 import com.ctrip.xpipe.redis.console.service.impl.ConsoleRedisInfoService;
 import com.ctrip.xpipe.redis.console.service.impl.DefaultCrossMasterDelayService;
@@ -25,11 +30,14 @@ import com.ctrip.xpipe.redis.console.sso.UserAccessFilter;
 import com.ctrip.xpipe.redis.console.util.DefaultMetaServerConsoleServiceManagerWrapper;
 import com.ctrip.xpipe.redis.core.meta.MetaCache;
 import com.ctrip.xpipe.spring.AbstractProfile;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.embedded.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.context.annotation.*;
 
 import java.util.concurrent.ScheduledExecutorService;
+
+import static com.ctrip.xpipe.spring.AbstractSpringConfigContext.SCHEDULED_EXECUTOR;
 
 /**
  * @author shyin
@@ -123,7 +131,20 @@ public class ConsoleContextConfig {
 	}
 
 	@Bean
-	public PersistenceCache persistence(CheckerConfig checkerConfig, ScheduledExecutorService scheduled) {
-		return new DefaultPersistenceCache(checkerConfig, scheduled);
+	public PersistenceCache persistence(CheckerConfig config,
+										@Qualifier(value = SCHEDULED_EXECUTOR) ScheduledExecutorService scheduled,
+										AlertEventService alertEventService,
+										ConfigDao configDao,
+										DcClusterShardService dcClusterShardService,
+										RedisDao redisDao,
+										ClusterDao clusterDao) {
+		return new DefaultPersistenceCache(
+				config, 
+				scheduled,
+				alertEventService,
+				configDao,
+				dcClusterShardService,
+				redisDao,
+				clusterDao);
 	}
 }

@@ -21,33 +21,41 @@ import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
 
 import static com.ctrip.xpipe.redis.console.service.ConfigService.*;
 
+
 public class DefaultPersistenceCache extends AbstractPersistenceCache{
-
-    @Autowired
+    
     private ClusterDao clusterDao;
-
-    @Autowired
+    
     private RedisDao redisDao;
-
-    @Autowired
+    
     private DcClusterShardService dcClusterShardService;
-
-    @Autowired
+    
     private ConfigDao configDao;
-
-    @Autowired
+    
     private AlertEventService alertEventService;
 
-    private static Logger logger = LoggerFactory.getLogger(DefaultPersistence.class);
+    private static Logger logger = LoggerFactory.getLogger(DefaultPersistenceCache.class);
     
-    public DefaultPersistenceCache(CheckerConfig config, ScheduledExecutorService scheduled) {
+    public DefaultPersistenceCache(CheckerConfig config, 
+                                   ScheduledExecutorService scheduled,
+                                   AlertEventService alertEventService,
+                                   ConfigDao configDao,
+                                   DcClusterShardService dcClusterShardService,
+                                   RedisDao redisDao,
+                                   ClusterDao clusterDao) {
         super(config, scheduled);
+        this.alertEventService = alertEventService;
+        this.configDao = configDao;
+        this.dcClusterShardService = dcClusterShardService;
+        this.redisDao = redisDao;
+        this.clusterDao = clusterDao;
     }
 
     @Override
@@ -167,6 +175,13 @@ public class DefaultPersistenceCache extends AbstractPersistenceCache{
 
     @Override
     Map<String, Date> doLoadAllClusterCreateTime() {
-        return null;
+        Map<String, Date> clusterCreateTimes = new HashMap<>();
+        List<ClusterTbl> clusterTbls = clusterDao.findAllClustersWithCreateTime();
+        for(ClusterTbl clusterTbl : clusterTbls) {
+            clusterCreateTimes.put(clusterTbl.getClusterName(), clusterTbl.getCreateTime());
+        }
+
+        return clusterCreateTimes;
     }
+    
 }

@@ -115,10 +115,10 @@ public class DefaultCheckerConsoleService extends AbstractService implements Che
 
     @Override
     public Map<String, Date> loadAllClusterCreateTime(String console) {
-        Map<String, Long> times = restTemplate.getForObject(console + ConsoleCheckerPath.PATH_GET_LOAD_ALL_CLUSTER_CREATE_TIME, Map.class);
+        Map<String, Integer> times = restTemplate.getForObject(console + ConsoleCheckerPath.PATH_GET_LOAD_ALL_CLUSTER_CREATE_TIME, Map.class);
         Map<String, Date> dates = Maps.newConcurrentMap();
         times.entrySet().stream().forEach(entry -> {
-            dates.put(entry.getKey(), new Date(entry.getValue()));
+            dates.put(entry.getKey(), new Date((long)entry.getValue()));
         });
         return dates;
     }

@@ -6,11 +6,16 @@ import com.ctrip.xpipe.redis.checker.healthcheck.actions.ping.DefaultPingService
 import com.ctrip.xpipe.redis.checker.impl.CheckerRedisInfoManager;
 import com.ctrip.xpipe.redis.checker.spring.ConsoleServerMode;
 import com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition;
+import com.ctrip.xpipe.redis.console.dao.ClusterDao;
+import com.ctrip.xpipe.redis.console.dao.ConfigDao;
+import com.ctrip.xpipe.redis.console.dao.RedisDao;
 import com.ctrip.xpipe.redis.console.healthcheck.meta.DcIgnoredConfigChangeListener;
-import com.ctrip.xpipe.redis.console.resources.DefaultPersistence;
 import com.ctrip.xpipe.redis.console.resources.DefaultPersistenceCache;
+import com.ctrip.xpipe.redis.console.service.DcClusterShardService;
 import com.ctrip.xpipe.redis.console.service.RedisInfoService;
+import com.ctrip.xpipe.redis.console.service.impl.AlertEventService;
 import com.ctrip.xpipe.redis.console.service.impl.DefaultRedisInfoService;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -18,6 +23,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 import java.util.concurrent.ScheduledExecutorService;
+
+import static com.ctrip.xpipe.spring.AbstractSpringConfigContext.SCHEDULED_EXECUTOR;
 
 /**
  * @author lishanglin
@@ -50,9 +57,22 @@ public class ConsoleCheckerContextConfig extends ConsoleContextConfig {
     public RedisInfoService redisInfoService() {
         return new DefaultRedisInfoService();
     }
-    
-    @Bean 
-    public PersistenceCache persistence(CheckerConfig checkerConfig, ScheduledExecutorService scheduled) {
-        return new DefaultPersistenceCache(checkerConfig, scheduled);
+
+    @Bean
+    public PersistenceCache persistence(CheckerConfig config,
+                                        @Qualifier(value = SCHEDULED_EXECUTOR) ScheduledExecutorService scheduled,
+                                        AlertEventService alertEventService,
+                                        ConfigDao configDao,
+                                        DcClusterShardService dcClusterShardService,
+                                        RedisDao redisDao,
+                                        ClusterDao clusterDao) {
+        return new DefaultPersistenceCache(
+                config,
+                scheduled,
+                alertEventService,
+                configDao,
+                dcClusterShardService,
+                redisDao,
+                clusterDao);
     }
 }

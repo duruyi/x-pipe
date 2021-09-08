@@ -85,8 +85,8 @@ public class CheckerContextConfig {
     }
 
     @Bean
-    public CheckerDbConfig checkerDbConfig(PersistenceCache persistenceCache, CheckerConfig config) {
-        return new DefaultCheckerDbConfig(persistenceCache, config);
+    public CheckerDbConfig checkerDbConfig(PersistenceCache persistenceCache) {
+        return new DefaultCheckerDbConfig(persistenceCache);
     }
 
     @Bean

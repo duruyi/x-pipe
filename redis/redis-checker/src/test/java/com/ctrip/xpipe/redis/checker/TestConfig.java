@@ -198,4 +198,14 @@ public class TestConfig implements CheckerConfig, AlertConfig {
     public boolean supportSentinelHealthCheck(ClusterType clusterType, String clusterName) {
         return clusterType.supportHealthCheck();
     }
+    
+    @Override
+    public int getProxyCheckUpRetryTimes() {
+        return 10;
+    }
+
+    @Override
+    public int getProxyCheckDownRetryTimes() {
+        return 1;
+    }
 }

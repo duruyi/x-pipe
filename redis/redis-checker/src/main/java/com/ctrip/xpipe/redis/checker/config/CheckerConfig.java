@@ -121,6 +121,10 @@ public interface CheckerConfig {
     Set<String> getAllCheckerAddress();
 
     long getConfigCacheTimeoutMilli();
+    
+    int getProxyCheckUpRetryTimes();
+    
+    int getProxyCheckDownRetryTimes();
 
     boolean supportSentinelHealthCheck(ClusterType clusterType, String clusterName);
 }

@@ -2,7 +2,8 @@ package com.ctrip.xpipe.redis.console.spring;
 
 import com.ctrip.xpipe.api.cluster.ClusterServer;
 import com.ctrip.xpipe.redis.checker.*;
-import com.ctrip.xpipe.redis.checker.cluster.CheckerLeaderElector;
+import com.ctrip.xpipe.redis.checker.cluster.AllCheckerLeaderElector;
+import com.ctrip.xpipe.redis.checker.cluster.GroupCheckerLeaderElector;
 import com.ctrip.xpipe.redis.checker.config.CheckerConfig;
 import com.ctrip.xpipe.redis.checker.config.CheckerDbConfig;
 import com.ctrip.xpipe.redis.checker.config.impl.DefaultCheckerDbConfig;
@@ -58,7 +59,7 @@ public class CheckerContextConfig {
     }
 
     @Bean(autowire = Autowire.BY_TYPE)
-    public PersistenceCache persistence(CheckerConfig checkerConfig, CheckerConsoleService checkerConsoleService, ScheduledExecutorService scheduled) {
+    public PersistenceCache persistenceCache1(CheckerConfig checkerConfig, CheckerConsoleService checkerConsoleService, ScheduledExecutorService scheduled) {
         return new CheckerPersistenceCache(checkerConfig, checkerConsoleService, scheduled);
     }
 
@@ -101,8 +102,8 @@ public class CheckerContextConfig {
 
     @Bean
     @Profile(AbstractProfile.PROFILE_NAME_PRODUCTION)
-    public CheckerLeaderElector checkerLeaderElector() {
-        return new CheckerLeaderElector();
+    public GroupCheckerLeaderElector checkerLeaderElector() {
+        return new GroupCheckerLeaderElector();
     }
 
     @Bean
@@ -170,6 +171,12 @@ public class CheckerContextConfig {
                                                    @Value("${server.port}") int serverPort) {
         return new HealthCheckReporter(healthStateService, checkerConfig, checkerConsoleService, clusterServer, redisDelayManager,
                 crossMasterDelayManager, pingService, clusterHealthManager, serverPort);
+    }
+    
+    @Bean(name = "ALLCHECKER")
+    @Profile(AbstractProfile.PROFILE_NAME_PRODUCTION)
+    public AllCheckerLeaderElector allCheckerLeaderElector() {
+        return new AllCheckerLeaderElector();
     }
 
 }

@@ -131,7 +131,7 @@ public class ConsoleContextConfig {
 	}
 
 	@Bean
-	public PersistenceCache persistence(CheckerConfig config,
+	public PersistenceCache persistenceCache3(CheckerConfig config,
 										@Qualifier(value = SCHEDULED_EXECUTOR) ScheduledExecutorService scheduled,
 										AlertEventService alertEventService,
 										ConfigDao configDao,

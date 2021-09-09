@@ -1,6 +1,7 @@
 package com.ctrip.xpipe.redis.console.spring;
 
 import com.ctrip.xpipe.redis.checker.PersistenceCache;
+import com.ctrip.xpipe.redis.checker.cluster.AllCheckerLeaderElector;
 import com.ctrip.xpipe.redis.checker.config.CheckerConfig;
 import com.ctrip.xpipe.redis.checker.healthcheck.actions.ping.DefaultPingService;
 import com.ctrip.xpipe.redis.checker.impl.CheckerRedisInfoManager;
@@ -15,12 +16,10 @@ import com.ctrip.xpipe.redis.console.service.DcClusterShardService;
 import com.ctrip.xpipe.redis.console.service.RedisInfoService;
 import com.ctrip.xpipe.redis.console.service.impl.AlertEventService;
 import com.ctrip.xpipe.redis.console.service.impl.DefaultRedisInfoService;
+import com.ctrip.xpipe.spring.AbstractProfile;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.web.servlet.ServletComponentScan;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.context.annotation.*;
 
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -59,7 +58,7 @@ public class ConsoleCheckerContextConfig extends ConsoleContextConfig {
     }
 
     @Bean
-    public PersistenceCache persistence(CheckerConfig config,
+    public PersistenceCache persistenceCache2(CheckerConfig config,
                                         @Qualifier(value = SCHEDULED_EXECUTOR) ScheduledExecutorService scheduled,
                                         AlertEventService alertEventService,
                                         ConfigDao configDao,
@@ -75,4 +74,11 @@ public class ConsoleCheckerContextConfig extends ConsoleContextConfig {
                 redisDao,
                 clusterDao);
     }
+
+    @Bean(name = "ALLCHECKER")
+    @Profile(AbstractProfile.PROFILE_NAME_PRODUCTION)
+    public AllCheckerLeaderElector allCheckerLeaderElector() {
+        return new AllCheckerLeaderElector();
+    }
+
 }

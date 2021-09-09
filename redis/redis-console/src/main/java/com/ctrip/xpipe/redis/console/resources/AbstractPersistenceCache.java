@@ -20,8 +20,7 @@ public abstract class AbstractPersistenceCache implements PersistenceCache {
     TimeBoundCache<Boolean> isSentinelAutoProcessCache;
     TimeBoundCache<Boolean> isAlertSystemOnCache;
     TimeBoundCache<Map<String, Date>> allClusterCreateTimeCache;
-
-//    Map<String, TimeBoundCache<List<ProxyEndpoint>>> monitorActiveProxiesCache;
+    
     abstract Set<String> doSentinelCheckWhiteList();
     abstract Set<String> doClusterAlertWhiteList();
     abstract boolean doIsSentinelAutoProcess();
@@ -40,23 +39,6 @@ public abstract class AbstractPersistenceCache implements PersistenceCache {
         isAlertSystemOnCache.getData(true);
         allClusterCreateTimeCache.getData(true);
     }
-
-//    @Override
-//    public boolean isClusterOnMigration(String clusterId) {
-//        //TODO will call redis db9 get master idc
-//        return persistence.isClusterOnMigration(clusterId);
-//    }
-
-//    @Override
-//    public void updateRedisRole(RedisHealthCheckInstance instance, Server.SERVER_ROLE role) {
-//        //no cache
-//        this.persistence.updateRedisRole(instance, role);
-//    }
-
-//    @Override
-//    public void recordAlert(AlertMessageEntity message, EmailResponse response) {
-//        this.persistence.recordAlert(message, response);
-//    }
 
     @Override
     public Set<String> sentinelCheckWhiteList() {

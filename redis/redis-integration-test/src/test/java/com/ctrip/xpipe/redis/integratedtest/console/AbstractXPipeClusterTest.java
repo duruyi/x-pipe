@@ -39,7 +39,7 @@ import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 import static com.ctrip.xpipe.foundation.DefaultFoundationService.DATA_CENTER_KEY;
-import static com.ctrip.xpipe.redis.checker.cluster.CheckerLeaderElector.KEY_CHECKER_ID;
+import static com.ctrip.xpipe.redis.checker.cluster.GroupCheckerLeaderElector.KEY_CHECKER_ID;
 import static com.ctrip.xpipe.redis.checker.config.CheckerConfig.KEY_CHECKER_META_REFRESH_INTERVAL;
 import static com.ctrip.xpipe.redis.checker.config.CheckerConfig.KEY_SENTINEL_CHECK_INTERVAL;
 import static com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition.KEY_SERVER_MODE;

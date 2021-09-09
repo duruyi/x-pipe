@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-import static com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition.SERVER_MODE.CONSOLE;
+import static com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition.SERVER_MODE.*;
 
 public class CheckerTest extends AbstractMetaServerMultiDcTest{
     public Map<String, ConsoleInfo> defaultConsoleInfo() {
@@ -26,14 +26,60 @@ public class CheckerTest extends AbstractMetaServerMultiDcTest{
         //start console + checker 2server
         consoleInfos.put("jq", new ConsoleInfo(CONSOLE).setConsole_port(18080).setChecker_port(28080));
         //start conset_checker 1server
-        consoleInfos.put("oy", new ConsoleInfo(CONSOLE).setConsole_port(18081).setChecker_port(28081));
+        consoleInfos.put("oy", new ConsoleInfo(CONSOLE_CHECKER).setConsole_port(18081).setChecker_port(28081));
         //start checker 1 server
-        consoleInfos.put("fra", new ConsoleInfo(CONSOLE).setConsole_port(18082).setChecker_port(28082));
+        consoleInfos.put("fra", new ConsoleInfo(CHECKER).setConsole_port(18080).setChecker_port(28082));
         return consoleInfos;
     }
+    
+    XpipeNettyClientKeyedObjectPool pool;
+    
     @Before
     public void testBefore() throws Exception {
         startCRDTAllServer(defaultConsoleInfo());
+        pool = getXpipeNettyClientKeyedObjectPool();
     }
     
+    @Test
+    public void SentinelCheck() throws Exception {
+       testSentinel("jq", 5000);
+       testSentinel("fra", 32222);
+    }
+    
+    public void testSentinel(String idc, int sentinel_port) throws Exception {
+        final String sentinelMaster = "will-remove-master-name";
+        final String localHost = "127.0.0.1";
+        final int localPort = 6379;
+        
+        SimpleObjectPool<NettyClient> clientPool = pool.getKeyPool(new DefaultEndPoint(localHost, sentinel_port));
+        String addResult = new AbstractSentinelCommand.SentinelAdd(clientPool, sentinelMaster, localHost, localPort, 3, scheduled).execute().get();
+        HostPort master = new AbstractSentinelCommand.SentinelMaster(clientPool, scheduled, sentinelMaster).execute().get();
+        Assert.assertEquals(master.getHost(), "127.0.0.1");
+        Assert.assertEquals(master.getPort(), 6379);
+        waitConditionUntilTimeOut(() -> {
+            HostPort port = null;
+            try {
+                port = new AbstractSentinelCommand.SentinelMaster(clientPool, scheduled, sentinelMaster).execute().get();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return port == null;
+        }, 100000, 1000);
+        closeCheck(idc);
+        addResult = new AbstractSentinelCommand.SentinelAdd(clientPool, sentinelMaster, localHost, localPort, 3, scheduled).execute().get();
+        master = new AbstractSentinelCommand.SentinelMaster(clientPool, scheduled, sentinelMaster).execute().get();
+        Assert.assertEquals(master.getHost(), localHost);
+        Assert.assertEquals(master.getPort(), localPort);
+        Thread.currentThread().sleep(100 * 1000);
+        master = new AbstractSentinelCommand.SentinelMaster(clientPool, scheduled, sentinelMaster).execute().get();
+        Assert.assertEquals(master.getHost(), localHost);
+        Assert.assertEquals(master.getPort(), localPort);
+    }
+
+    @After
+    public void testAfter() throws Exception {
+        stopAllServer();
+    }
 }
+
+

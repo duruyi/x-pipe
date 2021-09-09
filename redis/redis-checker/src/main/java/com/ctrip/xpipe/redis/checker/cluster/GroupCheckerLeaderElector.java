@@ -13,19 +13,17 @@ import javax.annotation.PreDestroy;
  * @author lishanglin
  * date 2021/3/8
  */
-public class CheckerLeaderElector extends AbstractLeaderElector implements ClusterServer {
-
-    public static String KEY_CHECKER_ID = "CHECKER_ID";
+public class GroupCheckerLeaderElector extends AbstractCheckerLeaderElector {
 
     @PostConstruct
     public void postContruct() throws Exception {
+        setLeaderAwareClass(GroupCheckerLeaderAware.class);
         doStart();
     }
 
 
     @Override
     protected String getServerId() {
-
         String id = IpUtils.getFistNonLocalIpv4ServerAddress().getHostAddress();
         String consoleId = System.getProperty(KEY_CHECKER_ID);
         if(!StringUtil.isEmpty(consoleId)){

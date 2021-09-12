@@ -477,5 +477,9 @@ public class DefaultConsoleConfig extends AbstractCoreConfig implements ConsoleC
     public long getMigrationTimeoutMilli() {
         return getLongProperty(KEY_MIGRATION_TIMEOUT_MILLI, 15000L);
     }
-
+    
+    @Override
+    public boolean consoleIsMySelf(String dc) {
+        return this.getConsoleDomains().get(dc) == this.getConsoleAddress();
+    }
 }

@@ -79,15 +79,15 @@ public class DefaultDelayService extends CheckerRedisDelayManager implements Del
         }
 
         long result;
-        if (!FoundationService.DEFAULT.getDataCenter().equalsIgnoreCase(dcId)) {
+        if(consoleConfig.consoleIsMySelf(dcId)) {
+            result = hostPort2Delay.getOrDefault(hostPort, DelayAction.SAMPLE_LOST_AND_NO_PONG);
+        } else {
             try {
                 result = consoleServiceManager.getDelay(hostPort.getHost(), hostPort.getPort(), dcId);
             } catch (Exception e) {
                 return -1L;
             }
-        } else {
-            result = hostPort2Delay.getOrDefault(hostPort, DelayAction.SAMPLE_LOST_AND_NO_PONG);
-        }
+        } 
         return TimeUnit.NANOSECONDS.toMillis(result);
     }
 

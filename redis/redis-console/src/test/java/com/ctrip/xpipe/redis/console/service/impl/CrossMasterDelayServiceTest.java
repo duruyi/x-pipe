@@ -6,6 +6,7 @@ import com.ctrip.xpipe.endpoint.HostPort;
 import com.ctrip.xpipe.redis.checker.AbstractCheckerTest;
 import com.ctrip.xpipe.redis.checker.healthcheck.actions.delay.DelayAction;
 import com.ctrip.xpipe.redis.checker.healthcheck.actions.delay.DelayActionContext;
+import com.ctrip.xpipe.redis.console.config.ConsoleConfig;
 import com.ctrip.xpipe.redis.console.console.impl.ConsoleServiceManager;
 import com.ctrip.xpipe.redis.checker.healthcheck.HealthCheckAction;
 import com.ctrip.xpipe.redis.checker.healthcheck.RedisHealthCheckInstance;
@@ -39,6 +40,9 @@ public class CrossMasterDelayServiceTest extends AbstractCheckerTest {
 
     @Mock
     private HealthCheckAction action;
+    
+    @Mock 
+    private ConsoleConfig config; 
 
     @Mock
     private MetaCache metaCache;
@@ -49,10 +53,13 @@ public class CrossMasterDelayServiceTest extends AbstractCheckerTest {
 
     @Before
     public void setupCrossMasterDelayServiceTest() {
+        service.setConsoleConfig(config);
+        Mockito.when(config.consoleIsMySelf(dcId)).thenReturn(true);
         Mockito.when(consoleServiceManager.getCrossMasterDelay(remoteDcId, clusterId, shardId)).thenReturn(Collections.singletonMap(dcId, Pair.of(new HostPort(), 10L)));
         Mockito.when(instance.getCheckInfo()).thenReturn(new DefaultRedisInstanceInfo(remoteDcId, clusterId, shardId, new HostPort(), null, ClusterType.BI_DIRECTION));
         Mockito.when(action.getActionInstance()).thenReturn(instance);
         Mockito.when(metaCache.getXpipeMeta()).thenReturn(getXpipeMeta());
+        
     }
 
     @Test

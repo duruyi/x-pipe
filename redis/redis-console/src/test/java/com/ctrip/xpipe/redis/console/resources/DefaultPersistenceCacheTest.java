@@ -64,7 +64,7 @@ public class DefaultPersistenceCacheTest extends AbstractConsoleIntegrationTest 
         configService.stopAlertSystem(new ConfigModel(), 1);
         Assert.assertFalse(persistenceCache.isAlertSystemOn());
         configService.startAlertSystem(new ConfigModel());
-        Assert.assertTrue(persistenceCache.isAlertSystemOn());
+        waitConditionUntilTimeOut(() -> persistenceCache.isAlertSystemOn(), 10, 1);
     }
 
     @Test
@@ -73,7 +73,7 @@ public class DefaultPersistenceCacheTest extends AbstractConsoleIntegrationTest 
         configService.stopSentinelAutoProcess(new ConfigModel(), 1);
         Assert.assertFalse(persistenceCache.isSentinelAutoProcess());
         configService.startSentinelAutoProcess(new ConfigModel());
-        Assert.assertTrue(persistenceCache.isSentinelAutoProcess());
+        waitConditionUntilTimeOut(() -> persistenceCache.isSentinelAutoProcess(), 10, 1);
     }
 
     @Test

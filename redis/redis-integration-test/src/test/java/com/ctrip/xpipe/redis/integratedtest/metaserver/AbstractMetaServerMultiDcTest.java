@@ -305,7 +305,8 @@ public class AbstractMetaServerMultiDcTest extends AbstractMetaServerIntegrated 
                         break;
                     case CONSOLE_CHECKER:
                         extraOptions.put(KEY_SERVER_MODE, CONSOLE_CHECKER.name());
-                        startConsole(info.console_port, idc, dcMeta.getZkServer().getAddress(), Collections.singletonList(consoles.get(idc)), consoles, metaservers, extraOptions);
+                        ServerStartCmd console_checker = startConsole(info.console_port, idc, dcMeta.getZkServer().getAddress(), Collections.singletonList(consoles.get(idc)), consoles, metaservers, extraOptions);
+                        checks.put(idc, new HealthServer("http://127.0.0.1:" + info.console_port + "/health", console_checker));
                         break;
                     case CHECKER:
                         checks.put(idc, new HealthServer("http://127.0.0.1:"+ info.checker_port + "/health" , startChecker(info.checker_port, idc, dcMeta.getZkServer().getAddress(), Collections.singletonList(String.format("127.0.0.1:" + info.console_port)))));
@@ -320,7 +321,7 @@ public class AbstractMetaServerMultiDcTest extends AbstractMetaServerIntegrated 
         for(DcMeta dcMeta: getXpipeMeta().getDcs().values()) {
             String idc = dcMeta.getId();
             ConsoleInfo info = consoleInfos.get(idc);
-            waitConsole("127.0.0.1:" + info.console_port, idc, 120000);
+            waitConsole("127.0.0.1:" + info.console_port, idc, 12000);
             dcMeta.getMetaServers().stream().forEach(meta -> {
                 startMetaServer(idc, String.format("http://127.0.0.1:%d" , info.console_port),  dcMeta.getZkServer().getAddress(),  meta.getPort(), dcinfos);
             });

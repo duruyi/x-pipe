@@ -2,6 +2,7 @@ package com.ctrip.xpipe.redis.console.spring;
 
 import com.ctrip.xpipe.redis.checker.PersistenceCache;
 import com.ctrip.xpipe.redis.checker.cluster.AllCheckerLeaderElector;
+import com.ctrip.xpipe.redis.checker.cluster.GroupCheckerLeaderElector;
 import com.ctrip.xpipe.redis.checker.config.CheckerConfig;
 import com.ctrip.xpipe.redis.checker.healthcheck.actions.ping.DefaultPingService;
 import com.ctrip.xpipe.redis.checker.impl.CheckerRedisInfoManager;
@@ -17,10 +18,12 @@ import com.ctrip.xpipe.redis.console.service.RedisInfoService;
 import com.ctrip.xpipe.redis.console.service.impl.AlertEventService;
 import com.ctrip.xpipe.redis.console.service.impl.DefaultRedisInfoService;
 import com.ctrip.xpipe.spring.AbstractProfile;
+import com.ctrip.xpipe.utils.XpipeThreadFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.context.annotation.*;
 
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 import static com.ctrip.xpipe.spring.AbstractSpringConfigContext.SCHEDULED_EXECUTOR;
@@ -58,8 +61,8 @@ public class ConsoleCheckerContextConfig extends ConsoleContextConfig {
     }
 
     @Bean
-    public PersistenceCache persistenceCache2(CheckerConfig config,
-                                        @Qualifier(value = SCHEDULED_EXECUTOR) ScheduledExecutorService scheduled,
+    public PersistenceCache persistenceCache(CheckerConfig config,
+                                         @Qualifier(value = SCHEDULED_EXECUTOR) ScheduledExecutorService scheduled,
                                         AlertEventService alertEventService,
                                         ConfigDao configDao,
                                         DcClusterShardService dcClusterShardService,
@@ -67,7 +70,7 @@ public class ConsoleCheckerContextConfig extends ConsoleContextConfig {
                                         ClusterDao clusterDao) {
         return new DefaultPersistenceCache(
                 config,
-                scheduled,
+                Executors.newScheduledThreadPool(1, XpipeThreadFactory.create("persistenceCache")),
                 alertEventService,
                 configDao,
                 dcClusterShardService,
@@ -81,4 +84,9 @@ public class ConsoleCheckerContextConfig extends ConsoleContextConfig {
         return new AllCheckerLeaderElector();
     }
 
+    @Bean
+    @Profile(AbstractProfile.PROFILE_NAME_PRODUCTION)
+    public GroupCheckerLeaderElector checkerLeaderElector() {
+        return new GroupCheckerLeaderElector();
+    }
 }

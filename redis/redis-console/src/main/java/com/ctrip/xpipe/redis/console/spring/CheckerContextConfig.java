@@ -33,15 +33,20 @@ import com.ctrip.xpipe.redis.console.service.meta.impl.BeaconMetaServiceImpl;
 import com.ctrip.xpipe.redis.console.util.DefaultMetaServerConsoleServiceManagerWrapper;
 import com.ctrip.xpipe.redis.core.meta.MetaCache;
 import com.ctrip.xpipe.spring.AbstractProfile;
+import com.ctrip.xpipe.utils.OsUtils;
+import com.ctrip.xpipe.utils.XpipeThreadFactory;
 import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 import static com.ctrip.xpipe.spring.AbstractSpringConfigContext.GLOBAL_EXECUTOR;
+import static com.ctrip.xpipe.spring.AbstractSpringConfigContext.SCHEDULED_EXECUTOR;
+
 
 /**
  * @author lishanglin
@@ -58,8 +63,9 @@ public class CheckerContextConfig {
         return new DcClusterShardServiceImpl();
     }
 
-    @Bean(autowire = Autowire.BY_TYPE)
-    public PersistenceCache persistenceCache1(CheckerConfig checkerConfig, CheckerConsoleService checkerConsoleService, ScheduledExecutorService scheduled) {
+    @Bean
+    public PersistenceCache persistenceCache(CheckerConfig checkerConfig, CheckerConsoleService checkerConsoleService,
+                                             @Qualifier(value = SCHEDULED_EXECUTOR) ScheduledExecutorService scheduled) {
         return new CheckerPersistenceCache(checkerConfig, checkerConsoleService, scheduled);
     }
 
@@ -76,7 +82,7 @@ public class CheckerContextConfig {
     }
 
     @Bean
-    public ProxyManager proxyManager(ClusterServer clusterServer, CheckerConfig checkerConfig, CheckerConsoleService checkerConsoleService) {
+    public ProxyManager proxyManager(GroupCheckerLeaderElector clusterServer, CheckerConfig checkerConfig, CheckerConsoleService checkerConsoleService) {
         return new CheckerProxyManager(clusterServer, checkerConfig, checkerConsoleService);
     }
 
@@ -165,7 +171,7 @@ public class CheckerContextConfig {
     @Bean
     @Profile(AbstractProfile.PROFILE_NAME_PRODUCTION)
     public HealthCheckReporter healthCheckReporter(CheckerConfig checkerConfig, CheckerConsoleService checkerConsoleService,
-                                                   ClusterServer clusterServer, RedisDelayManager redisDelayManager,
+                                                   GroupCheckerLeaderElector clusterServer, RedisDelayManager redisDelayManager,
                                                    CrossMasterDelayManager crossMasterDelayManager, PingService pingService,
                                                    ClusterHealthManager clusterHealthManager, HealthStateService healthStateService,
                                                    @Value("${server.port}") int serverPort) {

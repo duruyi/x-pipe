@@ -43,6 +43,7 @@ public class CheckerTest extends AbstractMetaServerMultiDcTest{
     @Test
     public void SentinelCheck() throws Exception {
        testSentinel("jq", 5000);
+       testSentinel("oy", 17170);
        testSentinel("fra", 32222);
     }
     
@@ -50,12 +51,13 @@ public class CheckerTest extends AbstractMetaServerMultiDcTest{
         final String sentinelMaster = "will-remove-master-name";
         final String localHost = "127.0.0.1";
         final int localPort = 6379;
+        final int waitTime = 2000;
         
         SimpleObjectPool<NettyClient> clientPool = pool.getKeyPool(new DefaultEndPoint(localHost, sentinel_port));
         String addResult = new AbstractSentinelCommand.SentinelAdd(clientPool, sentinelMaster, localHost, localPort, 3, scheduled).execute().get();
         HostPort master = new AbstractSentinelCommand.SentinelMaster(clientPool, scheduled, sentinelMaster).execute().get();
-        Assert.assertEquals(master.getHost(), "127.0.0.1");
-        Assert.assertEquals(master.getPort(), 6379);
+        Assert.assertEquals(master.getHost(), localHost);
+        Assert.assertEquals(master.getPort(), localPort);
         waitConditionUntilTimeOut(() -> {
             HostPort port = null;
             try {
@@ -64,13 +66,13 @@ public class CheckerTest extends AbstractMetaServerMultiDcTest{
                 e.printStackTrace();
             }
             return port == null;
-        }, 100000, 1000);
+        }, waitTime, 1000);
         closeCheck(idc);
         addResult = new AbstractSentinelCommand.SentinelAdd(clientPool, sentinelMaster, localHost, localPort, 3, scheduled).execute().get();
         master = new AbstractSentinelCommand.SentinelMaster(clientPool, scheduled, sentinelMaster).execute().get();
         Assert.assertEquals(master.getHost(), localHost);
         Assert.assertEquals(master.getPort(), localPort);
-        Thread.currentThread().sleep(100 * 1000);
+        Thread.currentThread().sleep(waitTime);
         master = new AbstractSentinelCommand.SentinelMaster(clientPool, scheduled, sentinelMaster).execute().get();
         Assert.assertEquals(master.getHost(), localHost);
         Assert.assertEquals(master.getPort(), localPort);

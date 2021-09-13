@@ -22,6 +22,7 @@ import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -48,12 +49,25 @@ public class DefaultHealthCheckEndpointFactory implements HealthCheckEndpointFac
     @Autowired
     private MetaCache metaCache;
     
-    Map<String, List<RouteMeta>> routes = new ConcurrentHashMap<>();
+    Map<String, List<RouteMeta>> routes;
+    
+    
+    public synchronized void initRoutes() {
+        if(this.routes != null) {
+            return;
+        }
+        updateRoutes();
+        if(this.routes == null) {
+            this.routes = Maps.newConcurrentMap();
+        }
+    }
     
     @Override
-    public void updateRoutes() {
+    public synchronized void updateRoutes() {
+        logger.info("[DefaultHealthCheckEndpointFactory][updateRoutes]");
         List<RouteMeta> allRoutes = metaCache.getRoutes();
         if(allRoutes == null || allRoutes.size() == 0) return;
+        
         ConcurrentHashMap<String, List<RouteMeta>> newRoutes = new ConcurrentHashMap<>();
         allRoutes.forEach(routeMeta -> {
             String dst = routeMeta.getDstDc();
@@ -77,10 +91,14 @@ public class DefaultHealthCheckEndpointFactory implements HealthCheckEndpointFac
 
     void registerProxy(HostPort hostPort) {
         String dst = metaCache.getDc(hostPort);
+        if(routes == null) {
+            initRoutes();
+        }
         List<RouteMeta> list = routes.get(dst);
         
         if(list != null && list.size() != 0) {
             RouteMeta route = selectRoute(list, hostPort);
+            logger.info("register proxy: {}:{} {}", hostPort.getHost(), hostPort.getPort(), getProxyProtocol(route));
             ProxyRegistry.registerProxy(hostPort.getHost(), hostPort.getPort(), getProxyProtocol(route));
         } 
         
@@ -96,7 +114,6 @@ public class DefaultHealthCheckEndpointFactory implements HealthCheckEndpointFac
     private final String PROXY_DOWN_EVENT = "proxy.client.down";
     @PostConstruct
     public void postConstruct() {
-        updateRoutes();
         ProxyRegistry.setChecker(proxyChecker);
         ProxyRegistry.onProxyUp(proxyInetSocketAddress ->  {
             logger.info("[proxy-client][up] {}", proxyInetSocketAddress.toString());

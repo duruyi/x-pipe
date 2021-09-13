@@ -53,20 +53,22 @@ public class DefaultDcMetaChangeManager extends AbstractStartStoppable implement
     public void compare(DcMeta future) {
         // init
         if(current == null) {
+            healthCheckEndpointFactory.updateRoutes();
             current = future;
             return;
         }
 
         // normal logic
         DcMetaComparator comparator = DcMetaComparator.buildComparator(current, future);
-        comparator.accept(this);
         DcRouteMetaComparator dcRouteMetaComparator = new DcRouteMetaComparator(current, future);
         //change routes
-        if(dcRouteMetaComparator.getAdded().size() != 0 
-            || dcRouteMetaComparator.getMofified().size() != 0
-            || dcRouteMetaComparator.getRemoved().size() != 0) {
+        if(dcRouteMetaComparator.getAdded().size() != 0
+                || dcRouteMetaComparator.getMofified().size() != 0
+                || dcRouteMetaComparator.getRemoved().size() != 0) {
             healthCheckEndpointFactory.updateRoutes();
         }
+        comparator.accept(this);
+        
         current = future;
         
     }

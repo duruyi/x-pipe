@@ -77,7 +77,9 @@ public class DefaultCheckerConsoleService extends AbstractService implements Che
 
     @Override
     public boolean isClusterOnMigration(String console, String clusterId) {
-        return restTemplate.getForObject(console + ConsoleCheckerPath.PATH_GET_IS_CLUSTER_ON_MIGRATION + "/" + clusterId, Boolean.class);
+        UriComponents comp = UriComponentsBuilder.fromHttpUrl(console + ConsoleCheckerPath.PATH_GET_IS_CLUSTER_ON_MIGRATION)
+                .buildAndExpand(clusterId.toString());
+        return restTemplate.getForObject(comp.toString() , Boolean.class);
     }
 
     @Override
@@ -109,13 +111,15 @@ public class DefaultCheckerConsoleService extends AbstractService implements Che
 
     @Override
     public Date getClusterCreateTime(String console, String clusterId) {
-        Long time = restTemplate.getForObject(console + ConsoleCheckerPath.PATH_GET_CLUSTER_CREATE_TIME, Long.class);
+        UriComponents comp = UriComponentsBuilder.fromHttpUrl(console + ConsoleCheckerPath.PATH_GET_CLUSTER_CREATE_TIME)
+                .buildAndExpand(clusterId);
+        Long time = restTemplate.getForObject(comp.toString(), Long.class);
         return new Date(time);
     }
 
     @Override
     public Map<String, Date> loadAllClusterCreateTime(String console) {
-        Map<String, Integer> times = restTemplate.getForObject(console + ConsoleCheckerPath.PATH_GET_LOAD_ALL_CLUSTER_CREATE_TIME, Map.class);
+        Map<String, Long> times = restTemplate.getForObject(console + ConsoleCheckerPath.PATH_GET_LOAD_ALL_CLUSTER_CREATE_TIME, Map.class);
         Map<String, Date> dates = Maps.newConcurrentMap();
         times.entrySet().stream().forEach(entry -> {
             dates.put(entry.getKey(), new Date((long)entry.getValue()));

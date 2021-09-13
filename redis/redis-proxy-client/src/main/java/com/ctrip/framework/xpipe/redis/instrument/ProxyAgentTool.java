@@ -8,6 +8,7 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.security.CodeSource;
+import java.util.regex.Pattern;
 
 public class ProxyAgentTool {
 
@@ -51,6 +52,10 @@ public class ProxyAgentTool {
 
             CodeSource src = AgentMain.class.getProtectionDomain().getCodeSource();
             URL url = src.getLocation();
+            if(Pattern.matches(".*/redis-proxy-client/target/classes/", url.toString())) {
+                url = new URL("file:" + url.getPath() + "../redis-proxy-client-1.2.6.jar");
+                url.getProtocol();
+            }
             URI uri = url.toURI();
             String protocol = uri.toString();
             String proxyFile;

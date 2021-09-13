@@ -480,6 +480,6 @@ public class DefaultConsoleConfig extends AbstractCoreConfig implements ConsoleC
     
     @Override
     public boolean consoleIsMySelf(String dc) {
-        return this.getConsoleDomains().get(dc) == this.getConsoleAddress();
+        return this.getConsoleDomains().get(dc).equals(this.getConsoleAddress());
     }
 }

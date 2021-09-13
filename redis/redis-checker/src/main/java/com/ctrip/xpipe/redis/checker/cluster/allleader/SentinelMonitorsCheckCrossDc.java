@@ -50,6 +50,7 @@ public class SentinelMonitorsCheckCrossDc extends AbstractAllCheckerLeaderTask {
     @Override
     public void doTask() {
         logger.debug("[doCheck] check sentinel monitors");
+        if(metaCache.getXpipeMeta() == null) return;
         Collection<DcMeta> dcMetas = dcsToCheck();
         for(DcMeta dcMeta: dcMetas) {
             Collection<SentinelMeta> sentinelMetas = dcMeta.getSentinels().values();

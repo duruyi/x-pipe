@@ -54,6 +54,7 @@ public class RedisSession {
         this.scheduled = scheduled;
         this.clientPool = keyedObjectPool.getKeyPool(endpoint);
         if(ProxyRegistry.getProxy(endpoint.getHost(), endpoint.getPort()) != null) {
+            logger.info("session command timeout {}:{} {}", endpoint.getHost(), endpoint.getPort(), AbstractRedisCommand.PROXYED_REDIS_CONNECTION_COMMAND_TIME_OUT_MILLI);
             commandTimeOut = AbstractRedisCommand.PROXYED_REDIS_CONNECTION_COMMAND_TIME_OUT_MILLI;
         }
     }

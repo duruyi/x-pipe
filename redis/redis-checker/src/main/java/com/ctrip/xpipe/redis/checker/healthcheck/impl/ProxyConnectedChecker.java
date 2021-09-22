@@ -8,6 +8,8 @@ import com.ctrip.xpipe.pool.XpipeNettyClientKeyedObjectPool;
 import com.ctrip.xpipe.redis.checker.config.CheckerConfig;
 import com.ctrip.xpipe.redis.core.proxy.command.ProxyPingCommand;
 import com.ctrip.xpipe.redis.core.proxy.command.entity.ProxyPongEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -21,7 +23,7 @@ import static com.ctrip.xpipe.spring.AbstractSpringConfigContext.SCHEDULED_EXECU
 
 @Component
 public class ProxyConnectedChecker implements ProxyChecker {
-    
+    Logger logger = LoggerFactory.getLogger(ProxyConnectedChecker.class);
     @Autowired
     private CheckerConfig checkerConfig;
     
@@ -36,14 +38,11 @@ public class ProxyConnectedChecker implements ProxyChecker {
         CompletableFuture<Boolean> future = new CompletableFuture();
         ProxyPingCommand proxyPingCommand = new ProxyPingCommand(keyedObjectPool.getKeyPool(new DefaultEndPoint(address.getHostName(), address.getPort())), scheduled);
         CommandFuture commandFuture = proxyPingCommand.execute();
-        commandFuture.addListener(new CommandFutureListener<ProxyPongEntity>() {
-            @Override
-            public void operationComplete(CommandFuture<ProxyPongEntity> commandFuture) throws Exception {
-                if(commandFuture.isSuccess()) {
-                    future.complete(true);
-                } else {
-                    future.complete(false);
-                }
+        commandFuture.addListener((CommandFutureListener<ProxyPongEntity>) commandFuture1 -> {
+            if(commandFuture1.isSuccess()) {
+                future.complete(true);
+            } else {
+                future.complete(false);
             }
         });
         return future;

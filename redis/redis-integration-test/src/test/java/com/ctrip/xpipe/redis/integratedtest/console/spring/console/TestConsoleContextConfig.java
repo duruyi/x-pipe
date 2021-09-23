@@ -82,7 +82,7 @@ public class TestConsoleContextConfig {
     @Bean
     @Lazy
     @Profile(AbstractProfile.PROFILE_NAME_PRODUCTION)
-    public MetaCache metaCache(FoundationService foundationService) {
+    public MetaCache metaCache() {
         return new DefaultMetaCache();
     }
 
@@ -127,7 +127,7 @@ public class TestConsoleContextConfig {
     }
 
     @Bean
-    public DefaultCrossMasterDelayService defaultCrossMasterDelayService(FoundationService foundationService) {
+    public DefaultCrossMasterDelayService defaultCrossMasterDelayService() {
         return new DefaultCrossMasterDelayService();
     }
 

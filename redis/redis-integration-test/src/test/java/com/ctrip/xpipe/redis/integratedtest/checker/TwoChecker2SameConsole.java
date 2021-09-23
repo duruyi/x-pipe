@@ -9,6 +9,8 @@ import com.ctrip.xpipe.pool.XpipeNettyClientKeyedObjectPool;
 import com.ctrip.xpipe.redis.core.entity.ClusterMeta;
 import com.ctrip.xpipe.redis.core.entity.RedisMeta;
 import com.ctrip.xpipe.redis.core.entity.ShardMeta;
+import com.ctrip.xpipe.redis.core.foundation.IdcUtil;
+import com.ctrip.xpipe.redis.core.meta.DcInfo;
 import com.ctrip.xpipe.redis.core.protocal.cmd.PeerOfCommand;
 import com.ctrip.xpipe.redis.core.protocal.cmd.PingCommand;
 import com.ctrip.xpipe.redis.integratedtest.console.cmd.RedisStartCmd;
@@ -18,8 +20,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
+
+import static com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition.KEY_SERVER_MODE;
+import static com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition.SERVER_MODE.CONSOLE;
+import static com.ctrip.xpipe.redis.console.config.impl.DefaultConsoleConfig.KEY_CLUSTER_SHARD_FOR_MIGRATE_SYS_CHECK;
 
 public class TwoChecker2SameConsole extends AbstractMetaServerMultiDcTest {
     
@@ -42,6 +51,7 @@ public class TwoChecker2SameConsole extends AbstractMetaServerMultiDcTest {
         stopRedis(master);
         return master;
     }
+    
     
     @Before 
     public void startServers() throws Exception {
@@ -79,7 +89,17 @@ public class TwoChecker2SameConsole extends AbstractMetaServerMultiDcTest {
         new PeerOfCommand(fraRedisPool, getGid(JQ_IDC), jqMasterEndpoint, scheduled).execute();
         
 //        
-//        startSpringConsole(consolePort);
+        Map<String, String> consoles = new HashMap<>();
+        consoles.put("jq", "http://127.0.0.1:" + consolePort);
+        consoles.put("fra", "http://127.0.0.1:" + consolePort);
+        Map<String, String> metaServers = new HashMap<>();
+        Map<String, String> extraOptions = new HashMap<>();
+        extraOptions.put(KEY_CLUSTER_SHARD_FOR_MIGRATE_SYS_CHECK, "cluster-dr,cluster-dr-shard1");
+        extraOptions.put(KEY_SERVER_MODE, CONSOLE.name());
+        extraOptions.put("console.cluster.types", "one_way,bi_direction,ONE_WAY,BI_DIRECTION");
+        
+        startSpringConsole(consolePort, JQ_IDC, "127.0.0.1:2181", Collections.singletonList("127.0.0.1:8080"), consoles, metaServers, extraOptions);
+
 //        startSpringChecker();
 //        startSpringChecker();
         

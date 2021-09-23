@@ -82,7 +82,7 @@ public class AbstractMetaServerMultiDcTest extends AbstractMetaServerIntegrated 
         return prepareDatasFromFile("src/test/resources/xpipe-crdt.sql");
     }
 
-    void startDb() throws Exception {
+    protected void startDb() throws Exception {
         //start db
 //        startH2Server();
         setUpTestDataSource(); // init data in h2
@@ -91,7 +91,7 @@ public class AbstractMetaServerMultiDcTest extends AbstractMetaServerIntegrated 
 
     }
 
-    int getGid(String idcName) throws Exception {
+    protected int getGid(String idcName) throws Exception {
         switch (idcName) {
             case "rb":
                 return 1;
@@ -112,7 +112,7 @@ public class AbstractMetaServerMultiDcTest extends AbstractMetaServerIntegrated 
         return startCrdtRedis(gid, meta.getPort());
     }
 
-    void stopRedis(RedisMeta meta) {
+    protected void stopRedis(RedisMeta meta) {
         try {
             new RedisKillCmd(meta.getPort(), executors).execute().get();
         } catch (Throwable th) {
@@ -137,7 +137,7 @@ public class AbstractMetaServerMultiDcTest extends AbstractMetaServerIntegrated 
         waitForServerAck(String.format("http://%s/api/dc/%s", url, idc), DcMeta.class, wait_time);
     }
 
-    RedisMeta findMaster(List<RedisMeta> lists) {
+    protected RedisMeta findMaster(List<RedisMeta> lists) {
         for(RedisMeta r : lists) {
             if(r.isMaster()) {
                 return r;

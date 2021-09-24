@@ -140,8 +140,8 @@ public class TestCheckerContextConfig {
     }
 
     @Bean
-    public CheckerCrossMasterDelayManager checkerCrossMasterDelayManager() {
-        return new CheckerCrossMasterDelayManager();
+    public CheckerCrossMasterDelayManager checkerCrossMasterDelayManager(FoundationService foundationService) {
+        return new CheckerCrossMasterDelayManager(foundationService.getDataCenter());
     }
 
     @Bean
@@ -171,12 +171,12 @@ public class TestCheckerContextConfig {
                 crossMasterDelayManager, pingService, clusterHealthManager, serverPort);
     }
 
-    @Bean(name = "ALLCHECKER")
-    @Profile(AbstractProfile.PROFILE_NAME_PRODUCTION)
-    public AllCheckerLeaderElector allCheckerLeaderElector() {
-        return new AllCheckerLeaderElector();
-    }
-    
+//    @Bean(name = "ALLCHECKER")
+//    @Profile(AbstractProfile.PROFILE_NAME_PRODUCTION)
+//    public AllCheckerLeaderElector allCheckerLeaderElector() {
+//        return new AllCheckerLeaderElector();
+//    }
+//    
     @Bean
     public FoundationService foundationService() {
         return new TestFoundationService();

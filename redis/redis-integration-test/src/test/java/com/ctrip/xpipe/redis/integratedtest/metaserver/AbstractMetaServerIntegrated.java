@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.ctrip.xpipe.foundation.DefaultFoundationService.DATA_CENTER_KEY;
+import static com.ctrip.xpipe.foundation.DefaultFoundationService.LOCAL_IP_KEY;
 import static com.ctrip.xpipe.redis.checker.cluster.AbstractCheckerLeaderElector.KEY_CHECKER_ID;
 import static com.ctrip.xpipe.redis.checker.config.CheckerConfig.*;
 import static com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition.KEY_SERVER_MODE;
@@ -101,6 +102,7 @@ public class AbstractMetaServerIntegrated extends AbstractXPipeClusterTest {
         ConfigurableApplicationContext cac = buildSpringContext(ConsoleApp.class, new HashMap<String, String>() {{
             put(HealthChecker.ENABLED, "true");
             put("server.port", String.valueOf(port));
+            put(KEY_CONSOLE_ADDRESS, "http://" + localDcConsoles.get(0));
             put("cat.client.enabled", "false");
             put("spring.profiles.active", AbstractProfile.PROFILE_NAME_PRODUCTION);
             put(DATA_CENTER_KEY, idc);
@@ -124,7 +126,7 @@ public class AbstractMetaServerIntegrated extends AbstractXPipeClusterTest {
                     put(KEY_CONSOLE_ADDRESS, "http://" + localDcConsoles.get(0));
                     put(KEY_CHECKER_ID, idc + port);
                     put(KEY_SERVER_MODE, CHECKER.name());
-//                    put(LOCAL_IP_KEY, localIp);
+                    put(LOCAL_IP_KEY, localIp);
                 }});
         return cac;
     }

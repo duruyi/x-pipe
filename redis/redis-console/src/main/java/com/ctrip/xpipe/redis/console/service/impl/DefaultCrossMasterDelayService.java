@@ -1,5 +1,6 @@
 package com.ctrip.xpipe.redis.console.service.impl;
 
+import com.ctrip.xpipe.api.foundation.FoundationService;
 import com.ctrip.xpipe.cluster.ClusterType;
 import com.ctrip.xpipe.endpoint.HostPort;
 import com.ctrip.xpipe.redis.checker.healthcheck.actions.delay.DelayAction;
@@ -34,6 +35,11 @@ public class DefaultCrossMasterDelayService extends CheckerCrossMasterDelayManag
     @Autowired
     private ConsoleConfig consoleConfig;
     
+    public DefaultCrossMasterDelayService(String currentDcId) {
+        super(currentDcId);
+    }
+
+
     public Map<String, Pair<HostPort, Long>> getPeerMasterDelay(String dc, String clusterId, String shardId) {
         Map<String, Pair<HostPort, Long>> peerMasterDelays = crossMasterDelays.get(new DcClusterShard(dc, clusterId, shardId));
         if (null == peerMasterDelays) return null;
@@ -52,7 +58,7 @@ public class DefaultCrossMasterDelayService extends CheckerCrossMasterDelayManag
 
     @Override
     public Map<String, Pair<HostPort, Long>> getPeerMasterDelayFromCurrentDc(String clusterId, String shardId) {
-        return getPeerMasterDelay(CURRENT_DC, clusterId, shardId);
+        return getPeerMasterDelay(currentDcId, clusterId, shardId);
     }
 
     public Map<String, Pair<HostPort, Long>> getPeerMasterDelayFromSourceDc(String sourceDcId, String clusterId, String shardId) {

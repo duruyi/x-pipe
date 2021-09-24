@@ -39,8 +39,6 @@ public class DefaultDelayService extends CheckerRedisDelayManager implements Del
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultDelayService.class);
 
-    private static final String currentDcId = FoundationService.DEFAULT.getDataCenter();
-
     @Autowired
     private MetaCache metaCache;
 
@@ -55,6 +53,9 @@ public class DefaultDelayService extends CheckerRedisDelayManager implements Del
 
     @Autowired
     private HealthStateService healthStateService;
+    
+    @Autowired
+    private FoundationService foundationService;
 
     @Override
     public void updateRedisDelays(Map<HostPort, Long> redisDelays) {
@@ -111,7 +112,7 @@ public class DefaultDelayService extends CheckerRedisDelayManager implements Del
         XpipeMeta xpipeMeta = metaCache.getXpipeMeta();
         if (null == xpipeMeta) return Collections.emptyMap();
 
-        if (!currentDcId.equalsIgnoreCase(dc)) {
+        if (!foundationService.getDataCenter().equalsIgnoreCase(dc)) {
             try {
                 return consoleServiceManager.getAllDelay(dc);
             } catch (Exception e) {
@@ -121,7 +122,7 @@ public class DefaultDelayService extends CheckerRedisDelayManager implements Del
 
         Map<HostPort, Long> localDelayMap = new HashMap<>(hostPort2Delay);
         for (String dcId : xpipeMeta.getDcs().keySet()) {
-            for (HostPort redis : metaCache.getAllActiveRedisOfDc(currentDcId, dcId)) {
+            for (HostPort redis : metaCache.getAllActiveRedisOfDc(foundationService.getDataCenter(), dcId)) {
                 if (!localDelayMap.containsKey(redis)) localDelayMap.put(redis, DelayAction.SAMPLE_LOST_AND_NO_PONG);
             }
         }
@@ -137,7 +138,7 @@ public class DefaultDelayService extends CheckerRedisDelayManager implements Del
             return null;
         }
 
-        if (!currentDcId.equalsIgnoreCase(dc)) {
+        if (!foundationService.getDataCenter().equalsIgnoreCase(dc)) {
             try {
                 return consoleServiceManager.getUnhealthyInstanceByIdc(dc);
             } catch (Exception e) {
@@ -146,7 +147,7 @@ public class DefaultDelayService extends CheckerRedisDelayManager implements Del
             }
         }
 
-        String currentIdc = FoundationService.DEFAULT.getDataCenter();
+        String currentIdc = foundationService.getDataCenter();
         Map<HostPort, HEALTH_STATE> cachedHealthStatus = healthStateService.getAllCachedState();
         UnhealthyInfoModel unhealthyInfo = new UnhealthyInfoModel();
         for (DcMeta dcMeta : xpipeMeta.getDcs().values()) {

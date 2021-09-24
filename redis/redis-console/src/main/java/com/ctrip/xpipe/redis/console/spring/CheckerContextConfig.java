@@ -149,8 +149,8 @@ public class CheckerContextConfig {
     }
 
     @Bean
-    public CheckerCrossMasterDelayManager checkerCrossMasterDelayManager() {
-        return new CheckerCrossMasterDelayManager();
+    public CheckerCrossMasterDelayManager checkerCrossMasterDelayManager(FoundationService foundationService) {
+        return new CheckerCrossMasterDelayManager(foundationService.getDataCenter());
     }
 
     @Bean

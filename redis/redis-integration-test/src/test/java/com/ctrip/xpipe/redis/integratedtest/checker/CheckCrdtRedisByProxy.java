@@ -23,7 +23,6 @@ public class CheckCrdtRedisByProxy extends AbstractMetaServerMultiDcTest {
     ApplicationContext jqChecker;
     RedisStartCmd jqMaster;
     RedisStartCmd fraMaster;
-//    MockWebServer jqConsole;
 
     ShardMeta getClusterMeta(String idc, String cluster, String shard) {
         return getXpipeMeta().getDcs().get(idc).getClusters().get(cluster).getShards().get(shard);
@@ -38,12 +37,14 @@ public class CheckCrdtRedisByProxy extends AbstractMetaServerMultiDcTest {
         stopRedis(master);
         return master;
     }
+
+    private int consolePort = 18080;
+    private final String JQ_IDC = "jq";
+    private final String FRA_IDC = "fra";
+    
     @Before
     public void startServers() throws Exception {
         startDb();
-        int consolePort = 18080;
-        final String JQ_IDC = "jq";
-        final String FRA_IDC = "fra";
         final String localhost = "127.0.0.1";
         String clusterName = "cluster1";
         String shardName = "shard1";

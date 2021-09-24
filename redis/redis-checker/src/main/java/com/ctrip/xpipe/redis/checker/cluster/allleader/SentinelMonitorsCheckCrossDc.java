@@ -31,11 +31,14 @@ public class SentinelMonitorsCheckCrossDc extends AbstractAllCheckerLeaderTask {
     PersistenceCache persistenceCache;
     
     @Autowired
+    FoundationService foundationService;
+    
+    @Autowired
     protected CheckerConfig config;
     
     protected List<DcMeta> dcsToCheck() {
         List<DcMeta> result = Lists.newArrayList();
-        result.add(metaCache.getXpipeMeta().getDcs().get(FoundationService.DEFAULT.getDataCenter()));
+        result.add(metaCache.getXpipeMeta().getDcs().get(foundationService.getDataCenter()));
         Set<String> ignoreDcNames = config.getIgnoredHealthCheckDc();
         List<DcMeta> toRemove = Lists.newArrayList();
         for(DcMeta dcMeta: result) {

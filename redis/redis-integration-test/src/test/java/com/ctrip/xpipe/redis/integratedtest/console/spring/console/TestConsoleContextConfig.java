@@ -128,8 +128,8 @@ public class TestConsoleContextConfig {
     }
 
     @Bean
-    public DefaultCrossMasterDelayService defaultCrossMasterDelayService() {
-        return new DefaultCrossMasterDelayService();
+    public DefaultCrossMasterDelayService defaultCrossMasterDelayService(FoundationService foundationService) {
+        return new DefaultCrossMasterDelayService(foundationService.getDataCenter());
     }
 
     @Bean

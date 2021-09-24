@@ -30,6 +30,7 @@ import com.ctrip.xpipe.redis.console.sso.UserAccessFilter;
 import com.ctrip.xpipe.redis.console.util.DefaultMetaServerConsoleServiceManagerWrapper;
 import com.ctrip.xpipe.redis.core.meta.MetaCache;
 import com.ctrip.xpipe.redis.integratedtest.console.config.SpringEnvConsoleConfig;
+import com.ctrip.xpipe.redis.integratedtest.console.config.TestFoundationService;
 import com.ctrip.xpipe.spring.AbstractProfile;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.embedded.FilterRegistrationBean;
@@ -147,6 +148,11 @@ public class TestConsoleContextConfig {
                 dcClusterShardService,
                 redisDao,
                 clusterDao);
+    }
+
+    @Bean
+    public FoundationService foundationService() {
+        return new TestFoundationService();
     }
     
 }

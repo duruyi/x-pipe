@@ -1,5 +1,6 @@
 package com.ctrip.xpipe.redis.console.spring;
 
+import com.ctrip.xpipe.api.foundation.FoundationService;
 import com.ctrip.xpipe.api.sso.LogoutHandler;
 import com.ctrip.xpipe.api.sso.UserInfoHolder;
 import com.ctrip.xpipe.redis.checker.PersistenceCache;
@@ -146,5 +147,10 @@ public class ConsoleContextConfig {
 				dcClusterShardService,
 				redisDao,
 				clusterDao);
+	}
+	
+	@Bean
+	public FoundationService foundationService() {
+		return FoundationService.DEFAULT;
 	}
 }

@@ -33,6 +33,7 @@ import com.ctrip.xpipe.redis.console.service.meta.impl.BeaconMetaServiceImpl;
 import com.ctrip.xpipe.redis.console.util.DefaultMetaServerConsoleServiceManagerWrapper;
 import com.ctrip.xpipe.redis.core.meta.MetaCache;
 import com.ctrip.xpipe.redis.integratedtest.console.config.SpringEnvConsoleConfig;
+import com.ctrip.xpipe.redis.integratedtest.console.config.TestFoundationService;
 import com.ctrip.xpipe.spring.AbstractProfile;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -174,6 +175,11 @@ public class TestCheckerContextConfig {
     @Profile(AbstractProfile.PROFILE_NAME_PRODUCTION)
     public AllCheckerLeaderElector allCheckerLeaderElector() {
         return new AllCheckerLeaderElector();
+    }
+    
+    @Bean
+    public FoundationService foundationService() {
+        return new TestFoundationService();
     }
 
 }

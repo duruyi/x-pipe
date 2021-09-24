@@ -1,6 +1,7 @@
 package com.ctrip.xpipe.redis.console.spring;
 
 import com.ctrip.xpipe.api.cluster.ClusterServer;
+import com.ctrip.xpipe.api.foundation.FoundationService;
 import com.ctrip.xpipe.redis.checker.*;
 import com.ctrip.xpipe.redis.checker.cluster.AllCheckerLeaderElector;
 import com.ctrip.xpipe.redis.checker.cluster.GroupCheckerLeaderElector;
@@ -183,6 +184,11 @@ public class CheckerContextConfig {
     @Profile(AbstractProfile.PROFILE_NAME_PRODUCTION)
     public AllCheckerLeaderElector allCheckerLeaderElector() {
         return new AllCheckerLeaderElector();
+    }
+
+    @Bean
+    public FoundationService foundationService() {
+        return FoundationService.DEFAULT;
     }
 
 }

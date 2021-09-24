@@ -1,5 +1,6 @@
 package com.ctrip.xpipe.redis.console.spring;
 
+import com.ctrip.xpipe.api.foundation.FoundationService;
 import com.ctrip.xpipe.redis.checker.PersistenceCache;
 import com.ctrip.xpipe.redis.checker.cluster.AllCheckerLeaderElector;
 import com.ctrip.xpipe.redis.checker.cluster.GroupCheckerLeaderElector;
@@ -88,5 +89,10 @@ public class ConsoleCheckerContextConfig extends ConsoleContextConfig {
     @Profile(AbstractProfile.PROFILE_NAME_PRODUCTION)
     public GroupCheckerLeaderElector checkerLeaderElector() {
         return new GroupCheckerLeaderElector();
+    }
+
+    @Bean
+    public FoundationService foundationService() {
+        return FoundationService.DEFAULT;
     }
 }

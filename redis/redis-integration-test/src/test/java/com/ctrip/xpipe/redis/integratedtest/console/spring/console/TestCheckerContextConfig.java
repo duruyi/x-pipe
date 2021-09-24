@@ -139,7 +139,7 @@ public class TestCheckerContextConfig {
     }
 
     @Bean
-    public CheckerCrossMasterDelayManager checkerCrossMasterDelayManager(FoundationService foundationService) {
+    public CheckerCrossMasterDelayManager checkerCrossMasterDelayManager() {
         return new CheckerCrossMasterDelayManager();
     }
 

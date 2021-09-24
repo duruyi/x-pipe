@@ -9,6 +9,7 @@ import com.ctrip.xpipe.pool.XpipeNettyClientKeyedObjectPool;
 import com.ctrip.xpipe.redis.core.entity.ClusterMeta;
 import com.ctrip.xpipe.redis.core.entity.RedisMeta;
 import com.ctrip.xpipe.redis.core.entity.ShardMeta;
+import com.ctrip.xpipe.redis.core.entity.ZkServerMeta;
 import com.ctrip.xpipe.redis.core.foundation.IdcUtil;
 import com.ctrip.xpipe.redis.core.meta.DcInfo;
 import com.ctrip.xpipe.redis.core.protocal.cmd.PeerOfCommand;
@@ -52,18 +53,25 @@ public class TwoChecker2SameConsole extends AbstractMetaServerMultiDcTest {
         return master;
     }
     
+    ZkServerMeta getZk(String idc) {
+        return getXpipeMeta().getDcs().get(idc).getZkServer();
+    }
     
     @Before 
     public void startServers() throws Exception {
         startDb();
+       
         int consolePort = 18080;
         final String JQ_IDC = "jq";
         final String FRA_IDC = "fra";
         final String localhost = "127.0.0.1";
         String clusterName = "cluster1";
         String shardName = "shard1";
-        
 
+        ZkServerMeta jqZk = getZk(JQ_IDC);
+        startZk(jqZk);
+        ZkServerMeta fraZk = getZk(FRA_IDC);
+        startZk(fraZk);
         XpipeNettyClientKeyedObjectPool pool = getXpipeNettyClientKeyedObjectPool();
         
         RedisMeta jqMasterInfo = getMasterRedis(JQ_IDC, clusterName, shardName);
@@ -98,11 +106,14 @@ public class TwoChecker2SameConsole extends AbstractMetaServerMultiDcTest {
         extraOptions.put(KEY_SERVER_MODE, CONSOLE.name());
         extraOptions.put("console.cluster.types", "one_way,bi_direction,ONE_WAY,BI_DIRECTION");
         
-        startSpringConsole(consolePort, JQ_IDC, "127.0.0.1:2181", Collections.singletonList("127.0.0.1:8080"), consoles, metaServers, extraOptions);
+        startSpringConsole(consolePort, JQ_IDC, jqZk.getAddress(), Collections.singletonList("127.0.0.1:" + consolePort), consoles, metaServers, extraOptions);
 
-//        startSpringChecker();
-//        startSpringChecker();
-        
+        int checkerPort = 18001;
+        startSpringChecker(checkerPort++, JQ_IDC, jqZk.getAddress(), Collections.singletonList("127.0.0.1:" + consolePort), "127.0.0.2");
+
+        startSpringChecker(checkerPort++, FRA_IDC, fraZk.getAddress(), Collections.singletonList("127.0.0.1:" + consolePort), "127.0.0.3");
+
+
     }
     
     @Test

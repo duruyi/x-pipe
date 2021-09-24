@@ -21,14 +21,17 @@ import org.junit.After;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.ctrip.xpipe.foundation.DefaultFoundationService.DATA_CENTER_KEY;
-import static com.ctrip.xpipe.redis.checker.config.CheckerConfig.KEY_CHECKER_META_REFRESH_INTERVAL;
-import static com.ctrip.xpipe.redis.checker.config.CheckerConfig.KEY_SENTINEL_CHECK_INTERVAL;
+import static com.ctrip.xpipe.redis.checker.cluster.AbstractCheckerLeaderElector.KEY_CHECKER_ID;
+import static com.ctrip.xpipe.redis.checker.config.CheckerConfig.*;
+import static com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition.KEY_SERVER_MODE;
+import static com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition.SERVER_MODE.CHECKER;
 import static com.ctrip.xpipe.redis.console.config.impl.DefaultConsoleConfig.KEY_METASERVERS;
 import static com.ctrip.xpipe.redis.core.config.AbstractCoreConfig.KEY_ZK_ADDRESS;
 
@@ -71,7 +74,13 @@ public class AbstractMetaServerIntegrated extends AbstractXPipeClusterTest {
     private ConfigurableApplicationContext buildSpringContext(Class<?> mainClass, Map<String, String> args) {
         String[] rawArgs = args.entrySet().stream().map(arg -> String.format("--%s=%s", arg.getKey(), arg.getValue(), arg.getKey(), arg.getValue())).collect(Collectors.toList())
                 .toArray(new String[args.size()]);
+        args.forEach((key, value) -> {
+            System.setProperty(key, value);
+        });
         ConfigurableApplicationContext cac =  new SpringApplicationBuilder(mainClass).run(rawArgs);
+        args.forEach((key, value) -> {
+            System.setProperty(key, "");
+        });
         return cac;
     }
 
@@ -106,5 +115,19 @@ public class AbstractMetaServerIntegrated extends AbstractXPipeClusterTest {
         springCACs.put("xpipe-console-" + port, cac);
         return cac;
     }
+    
+    protected ConfigurableApplicationContext startSpringChecker(int port, String idc, String zk, List<String> localDcConsoles, String localIp) {
+        ConfigurableApplicationContext cac = startSpringConsole(port, idc, zk,
+                localDcConsoles, Collections.emptyMap(),
+                Collections.emptyMap(),
+                new HashMap<String, String>() {{
+                    put(KEY_CONSOLE_ADDRESS, "http://" + localDcConsoles.get(0));
+                    put(KEY_CHECKER_ID, idc + port);
+                    put(KEY_SERVER_MODE, CHECKER.name());
+//                    put(LOCAL_IP_KEY, localIp);
+                }});
+        return cac;
+    }
+
 
 }

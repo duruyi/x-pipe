@@ -53,7 +53,7 @@ public class AbstractMetaServerMultiDcTest extends AbstractMetaServerIntegrated 
     }
     Map<String, String> zkUrls = new HashMap<>();
     //start zk
-    ZkTestServer startZk(ZkServerMeta zkServerMeta) {
+    public ZkTestServer startZk(ZkServerMeta zkServerMeta) {
         String[] addresses = zkServerMeta.getAddress().split("\\s*,\\s*");
         if (addresses.length != 1) {
             throw new IllegalStateException("zk server test should only be one there!" + zkServerMeta.getAddress());

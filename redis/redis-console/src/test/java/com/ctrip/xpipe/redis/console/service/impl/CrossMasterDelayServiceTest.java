@@ -30,7 +30,7 @@ import java.util.Collections;
 public class CrossMasterDelayServiceTest extends AbstractCheckerTest {
 
     @InjectMocks
-    private DefaultCrossMasterDelayService service;
+    private DefaultCrossMasterDelayService service = new DefaultCrossMasterDelayService(FoundationService.DEFAULT.getDataCenter());
 
     @Mock
     private ConsoleServiceManager consoleServiceManager;

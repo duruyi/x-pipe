@@ -19,6 +19,7 @@ import com.ctrip.xpipe.redis.core.entity.*;
 import com.ctrip.xpipe.redis.core.meta.MetaCache;
 import com.ctrip.xpipe.tuple.Pair;
 import com.ctrip.xpipe.utils.StringUtil;
+import com.ctrip.xpipe.utils.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -201,5 +202,9 @@ public class DefaultDelayService extends CheckerRedisDelayManager implements Del
     public UnhealthyInfoModel getAllUnhealthyInstanceFromParallelService() {
         return consoleServiceManager.getAllUnhealthyInstanceFromParallelService();
     }
-
+    
+    @VisibleForTesting
+    public void setFoundationService(FoundationService foundationService) {
+        this.foundationService = foundationService;
+    }
 }

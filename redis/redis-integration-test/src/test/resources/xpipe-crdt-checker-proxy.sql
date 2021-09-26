@@ -20,11 +20,11 @@ insert into DC_CLUSTER_SHARD_TBL (dc_cluster_shard_id,dc_cluster_id,shard_id,set
 
 -- redis
 insert into REDIS_TBL (id,run_id,dc_cluster_shard_id,redis_ip,redis_port,redis_role,master,redis_master,keepercontainer_id) values(1,'unknown',1,'127.0.0.1',36379,'redis',1,0,null);
-insert into REDIS_TBL (id,run_id,dc_cluster_shard_id,redis_ip,redis_port,redis_role,master,redis_master,keepercontainer_id) values(2,'unknown',1,'127.0.0.1',36380,'redis',0,1,null);
-insert into REDIS_TBL (id,run_id,dc_cluster_shard_id,redis_ip,redis_port,redis_role,master,redis_master,keepercontainer_id) values(3,'unknown',2,'127.0.0.1',37379,'redis',1,0,null);
-insert into REDIS_TBL (id,run_id,dc_cluster_shard_id,redis_ip,redis_port,redis_role,master,redis_master,keepercontainer_id) values(4,'unknown',2,'127.0.0.1',37380,'redis',0,3,null);
+-- insert into REDIS_TBL (id,run_id,dc_cluster_shard_id,redis_ip,redis_port,redis_role,master,redis_master,keepercontainer_id) values(2,'unknown',1,'127.0.0.1',36380,'redis',0,1,null);
+-- insert into REDIS_TBL (id,run_id,dc_cluster_shard_id,redis_ip,redis_port,redis_role,master,redis_master,keepercontainer_id) values(3,'unknown',2,'127.0.0.1',37379,'redis',1,0,null);
+-- insert into REDIS_TBL (id,run_id,dc_cluster_shard_id,redis_ip,redis_port,redis_role,master,redis_master,keepercontainer_id) values(4,'unknown',2,'127.0.0.1',37380,'redis',0,3,null);
 insert into REDIS_TBL (id,run_id,dc_cluster_shard_id,redis_ip,redis_port,redis_role,master,redis_master,keepercontainer_id) values(5,'unknown',3,'127.0.0.1',38379,'redis',1,0,null);
-insert into REDIS_TBL (id,run_id,dc_cluster_shard_id,redis_ip,redis_port,redis_role,master,redis_master,keepercontainer_id) values(6,'unknown',3,'127.0.0.1',38380,'redis',0,5,null);
+-- insert into REDIS_TBL (id,run_id,dc_cluster_shard_id,redis_ip,redis_port,redis_role,master,redis_master,keepercontainer_id) values(6,'unknown',3,'127.0.0.1',38380,'redis',0,5,null);
 --proxy
 insert into proxy_tbl (id,dc_id,uri,monitor_active) values(0, 1,'PROXYTCP://127.0.0.1:11080',1);
 insert into proxy_tbl (id,dc_id,uri,monitor_active) values(1, 1, 'PROXYTLS://127.0.0.1:11443',1);

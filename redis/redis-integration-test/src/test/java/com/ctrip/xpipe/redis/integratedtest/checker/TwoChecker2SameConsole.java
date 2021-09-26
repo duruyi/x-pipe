@@ -74,11 +74,10 @@ public class TwoChecker2SameConsole extends AbstractMetaServerMultiDcTest {
     private final String FRA_IDC = "fra";
     
     private int consolePort = 18080;
+    List<CrdtRedisServer> masters = Lists.newArrayList();
     @Before 
     public void startServers() throws Exception {
         startDb();
-       
-        
         
         final String localhost = "127.0.0.1";
         String clusterName = "cluster1";
@@ -90,7 +89,6 @@ public class TwoChecker2SameConsole extends AbstractMetaServerMultiDcTest {
         startZk(fraZk);
         XpipeNettyClientKeyedObjectPool pool = getXpipeNettyClientKeyedObjectPool();
         
-        List<CrdtRedisServer> masters = Lists.newArrayList();
         RedisMeta jqMasterInfo = getMasterRedis(JQ_IDC, clusterName, shardName);
         masters.add(new CrdtRedisServer(getGid(JQ_IDC), jqMasterInfo));
         RedisMeta fraMasterInfo = getMasterRedis(FRA_IDC, clusterName, shardName);
@@ -149,5 +147,8 @@ public class TwoChecker2SameConsole extends AbstractMetaServerMultiDcTest {
     public void stopServers() throws Exception {
         if(jqMaster != null) jqMaster.killProcess();
         if(fraMaster != null) fraMaster.killProcess();
+        masters.forEach(master -> {
+            master.stop();
+        });
     }
 }

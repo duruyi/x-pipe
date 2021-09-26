@@ -19,6 +19,7 @@ import com.ctrip.xpipe.redis.core.protocal.cmd.RoleCommand;
 import com.ctrip.xpipe.redis.core.protocal.pojo.Role;
 import com.ctrip.xpipe.redis.integratedtest.console.app.ConsoleApp;
 import com.ctrip.xpipe.redis.integratedtest.console.app.MetaserverApp;
+import com.ctrip.xpipe.redis.integratedtest.console.app.ProxyApp;
 import com.ctrip.xpipe.redis.integratedtest.console.cmd.CrdtRedisStartCmd;
 import com.ctrip.xpipe.redis.integratedtest.console.cmd.RedisKillCmd;
 import com.ctrip.xpipe.redis.integratedtest.console.cmd.RedisStartCmd;
@@ -458,6 +459,24 @@ public abstract class AbstractXPipeClusterTest extends AbstractConsoleDbTest {
                 logger.info("[killRedisServers][{}] fail", port, th);
             }
         });
+    }
+    
+    public ServerStartCmd startProxy(String idc, int tcpPort, int tlsPort) {
+        ServerStartCmd consoleServer = new ServerStartCmd(idc + tcpPort + "-" + tlsPort, ProxyApp.class.getName(), new HashMap<String, String>() {{
+            put("tcp_port", String.valueOf(tcpPort));
+            put("tls_port", String.valueOf(tlsPort));
+        }}, executors);
+        consoleServer.execute(executors).addListener(consoleFuture -> {
+            if (consoleFuture.isSuccess()) {
+                logger.info("[startConsoleJQ] console {}-{}-{} end {}", idc, tcpPort, tlsPort, consoleFuture.get());
+            } else {
+                logger.info("[startConsoleJQ] console {}-{}-{} fail", idc, tcpPort, tlsPort, consoleFuture.cause());
+            }
+
+        });
+
+        subProcessCmds.add(consoleServer);
+        return consoleServer;
     }
 
 }

@@ -1,8 +1,6 @@
 package com.ctrip.xpipe.redis.integratedtest.checker;
 
 
-import com.ctrip.xpipe.api.command.Command;
-import com.ctrip.xpipe.api.email.EmailResponse;
 import com.ctrip.xpipe.api.pool.SimpleObjectPool;
 import com.ctrip.xpipe.api.server.Server;
 import com.ctrip.xpipe.cluster.ClusterType;
@@ -12,7 +10,6 @@ import com.ctrip.xpipe.netty.commands.NettyClient;
 import com.ctrip.xpipe.pool.XpipeNettyClientKeyedObjectPool;
 import com.ctrip.xpipe.redis.checker.CheckerConsoleService;
 import com.ctrip.xpipe.redis.checker.alert.AlertMessageEntity;
-import com.ctrip.xpipe.redis.checker.healthcheck.RedisHealthCheckInstance;
 import com.ctrip.xpipe.redis.checker.healthcheck.config.DefaultHealthCheckConfig;
 import com.ctrip.xpipe.redis.checker.healthcheck.impl.DefaultRedisHealthCheckInstance;
 import com.ctrip.xpipe.redis.checker.healthcheck.impl.DefaultRedisInstanceInfo;
@@ -27,8 +24,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.*;
-import java.util.concurrent.ExecutionException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 import static com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition.SERVER_MODE.*;
 
@@ -93,7 +91,6 @@ public class CheckerTest extends AbstractMetaServerMultiDcTest{
     @Test
     public void testUrl() {
         final String consoleUrl = "http://127.0.0.1:18080";
-//        final String consoleCheckUrl = "http://127.0.0.1:18081";
         
         CheckerConsoleService service = new DefaultCheckerConsoleService();
         

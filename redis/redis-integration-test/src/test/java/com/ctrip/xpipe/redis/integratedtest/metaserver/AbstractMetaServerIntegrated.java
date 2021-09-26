@@ -80,7 +80,6 @@ public class AbstractMetaServerIntegrated extends AbstractXPipeClusterTest {
         server.setResourceManager(resourceManager);
         server.setPingStatsManager(new DefaultPingStatsManager());
         server.start();
-// subProcessCmds.add(server);
         return server;
     }
 

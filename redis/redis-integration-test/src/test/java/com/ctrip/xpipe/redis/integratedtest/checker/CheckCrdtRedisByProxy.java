@@ -1,29 +1,26 @@
 package com.ctrip.xpipe.redis.integratedtest.checker;
 
-import com.ctrip.xpipe.api.endpoint.Endpoint;
-import com.ctrip.xpipe.api.pool.SimpleObjectPool;
-import com.ctrip.xpipe.endpoint.DefaultEndPoint;
-import com.ctrip.xpipe.netty.commands.NettyClient;
+import com.ctrip.xpipe.endpoint.HostPort;
 import com.ctrip.xpipe.pool.XpipeNettyClientKeyedObjectPool;
 import com.ctrip.xpipe.redis.core.entity.RedisMeta;
 import com.ctrip.xpipe.redis.core.entity.ShardMeta;
 import com.ctrip.xpipe.redis.core.entity.ZkServerMeta;
-import com.ctrip.xpipe.redis.core.protocal.cmd.PeerOfCommand;
-import com.ctrip.xpipe.redis.core.protocal.cmd.PingCommand;
 import com.ctrip.xpipe.redis.integratedtest.console.cmd.RedisStartCmd;
+import com.ctrip.xpipe.redis.integratedtest.console.cmd.ServerStartCmd;
 import com.ctrip.xpipe.redis.integratedtest.metaserver.AbstractMetaServerMultiDcTest;
+import com.ctrip.xpipe.spring.RestTemplateFactory;
 import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
+import org.springframework.web.client.RestOperations;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 import static com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition.KEY_SERVER_MODE;
 import static com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition.SERVER_MODE.CONSOLE;
@@ -55,25 +52,29 @@ public class CheckCrdtRedisByProxy extends AbstractMetaServerMultiDcTest {
     private int consolePort = 18080;
     private final String JQ_IDC = "jq";
     private final String FRA_IDC = "fra";
-
+    private RestOperations restOperations;
+    List<ServerStartCmd> proxyServers = Lists.newArrayList();
+    List<CrdtRedisServer> masters = Lists.newArrayList();
     ZkServerMeta getZk(String idc) {
         return getXpipeMeta().getDcs().get(idc).getZkServer();
     }
     
     @Before
     public void startServers() throws Exception {
+        restOperations = RestTemplateFactory.createCommonsHttpRestTemplate(1000, 1000, 1000, 15000);
 
-        startProxyServer( 11080, 11443);
-        startProxyServer( 11081, 11444);
-        startProxyServer( 11082, 11445);
-        startProxyServer( 11083, 11446);
+        proxyServers.add(startProxy( "jq", 11080, 11443));
+        proxyServers.add(startProxy( "fra",11081, 11444));
+        proxyServers.add(startProxy( "jq",11082, 11445));
+        proxyServers.add(startProxy( "fra",11083, 11446));
+        
         startDb();
         final String localhost = "127.0.0.1";
         String clusterName = "cluster1";
         String shardName = "shard1";
         
         XpipeNettyClientKeyedObjectPool pool = getXpipeNettyClientKeyedObjectPool();
-        List<CrdtRedisServer> masters = Lists.newArrayList();
+        
         RedisMeta jqMasterInfo = getMasterRedis(JQ_IDC, clusterName, shardName);
         masters.add(new CrdtRedisServer(getGid(JQ_IDC), jqMasterInfo));
         RedisMeta fraMasterInfo = getMasterRedis(FRA_IDC, clusterName, shardName);
@@ -102,17 +103,47 @@ public class CheckCrdtRedisByProxy extends AbstractMetaServerMultiDcTest {
         jqChecker = startSpringChecker(checkerPort++, JQ_IDC, jqZk.getAddress(), Collections.singletonList("127.0.0.1:" + consolePort), "127.0.0.2");
 
     }
-
+    
     @Test
-    public void waitConsole() throws InterruptedException {
-        Thread.currentThread().join();
+    public void checkHelath() throws Exception {
+        waitConditionUntilTimeOut(() -> {
+            Map<String, Map<HostPort, Object>> result = restOperations.getForObject("http://127.0.0.1:"+consolePort+"/console/cross-master/delay/bi_direction/"+JQ_IDC+"/cluster1/shard1", Map.class);
+            if(result == null || result.get(FRA_IDC) == null || result.get(FRA_IDC).size() == 0) return false;
+            for(Object value : result.get(FRA_IDC).values()) {
+                if(value instanceof  Integer) {
+                    int v = (int)value;
+                    if(v < 0 || v >= 999000) {
+                        return false;
+                    }
+                } else if(value instanceof Long) {
+                    long v = (long)value;
+                    if(v < 0 || v >= 999000) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }, 50000, 1000);
     }
 
     @After
     public void stopServers() {
-        jqMaster.killProcess();
-        fraMaster.killProcess();
-//        jqChecker.close();
-//        jqConsole.close();
-    }
+        if(jqMaster != null) jqMaster.killProcess();
+        if(fraMaster != null) fraMaster.killProcess();
+        proxyServers.forEach(proxyServer -> {
+            try {
+                proxyServer.killProcess();
+            }catch (Exception e) {
+                e.printStackTrace();
+            }
+            
+        });
+        masters.forEach(master -> {
+            try {
+                master.stop();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        }
 }

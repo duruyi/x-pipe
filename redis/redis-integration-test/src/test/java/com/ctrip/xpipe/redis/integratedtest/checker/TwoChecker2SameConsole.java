@@ -19,6 +19,7 @@ import com.ctrip.xpipe.redis.integratedtest.console.cmd.RedisStartCmd;
 import com.ctrip.xpipe.redis.integratedtest.metaserver.AbstractMetaServerMultiDcTest;
 import com.ctrip.xpipe.spring.RestTemplateFactory;
 import com.ctrip.xpipe.tuple.Pair;
+import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -89,27 +90,12 @@ public class TwoChecker2SameConsole extends AbstractMetaServerMultiDcTest {
         startZk(fraZk);
         XpipeNettyClientKeyedObjectPool pool = getXpipeNettyClientKeyedObjectPool();
         
+        List<CrdtRedisServer> masters = Lists.newArrayList();
         RedisMeta jqMasterInfo = getMasterRedis(JQ_IDC, clusterName, shardName);
-        jqMaster = startCrdtRedis(getGid(JQ_IDC), jqMasterInfo.getPort());
+        masters.add(new CrdtRedisServer(getGid(JQ_IDC), jqMasterInfo));
         RedisMeta fraMasterInfo = getMasterRedis(FRA_IDC, clusterName, shardName);
-        fraMaster = startCrdtRedis(getGid(FRA_IDC), fraMasterInfo.getPort());
-        Endpoint fraMasterEndpoint = new DefaultEndPoint(localhost, fraMasterInfo.getPort());
-        Endpoint jqMasterEndpoint = new DefaultEndPoint(localhost, jqMasterInfo.getPort());
-        SimpleObjectPool<NettyClient> jqRedisPool = pool.getKeyPool(jqMasterEndpoint);
-        SimpleObjectPool<NettyClient> fraRedisPool = pool.getKeyPool(fraMasterEndpoint);
-        waitConditionUntilTimeOut(() -> {
-            try {
-                return new PingCommand(jqRedisPool,scheduled).execute().get().equals("PONG");
-            } catch (InterruptedException e) {
-                return false;
-            } catch (ExecutionException e) {
-                return false;
-            }
-        }, 10000, 1000);
-        
-        
-        new PeerOfCommand(jqRedisPool, getGid(FRA_IDC), fraMasterEndpoint, scheduled).execute();
-        new PeerOfCommand(fraRedisPool, getGid(JQ_IDC), jqMasterEndpoint, scheduled).execute();
+        masters.add(new CrdtRedisServer(getGid(FRA_IDC), fraMasterInfo));
+        startCrdtMasters(masters , pool, scheduled);
         
 //        
         Map<String, String> consoles = new HashMap<>();

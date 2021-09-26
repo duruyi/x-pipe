@@ -1,9 +1,17 @@
 package com.ctrip.xpipe.redis.integratedtest.metaserver;
 
+import com.ctrip.xpipe.api.pool.SimpleObjectPool;
 import com.ctrip.xpipe.codec.JsonCodec;
+import com.ctrip.xpipe.endpoint.DefaultEndPoint;
+import com.ctrip.xpipe.netty.commands.NettyClient;
+import com.ctrip.xpipe.pool.XpipeNettyClientKeyedObjectPool;
 import com.ctrip.xpipe.redis.checker.healthcheck.HealthChecker;
+import com.ctrip.xpipe.redis.core.entity.RedisMeta;
+import com.ctrip.xpipe.redis.core.protocal.cmd.PeerOfCommand;
+import com.ctrip.xpipe.redis.core.protocal.cmd.PingCommand;
 import com.ctrip.xpipe.redis.integratedtest.console.AbstractXPipeClusterTest;
 import com.ctrip.xpipe.redis.integratedtest.console.app.ConsoleApp;
+import com.ctrip.xpipe.redis.integratedtest.console.cmd.RedisStartCmd;
 import com.ctrip.xpipe.redis.integratedtest.metaserver.proxy.LocalProxyConfig;
 import com.ctrip.xpipe.redis.integratedtest.metaserver.proxy.LocalResourceManager;
 import com.ctrip.xpipe.redis.proxy.DefaultProxyServer;
@@ -17,6 +25,7 @@ import com.ctrip.xpipe.redis.proxy.tunnel.TunnelManager;
 import com.ctrip.xpipe.spring.AbstractProfile;
 import com.ctrip.xpipe.zk.ZkTestServer;
 import com.google.common.collect.Maps;
+import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -25,6 +34,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static com.ctrip.xpipe.foundation.DefaultFoundationService.DATA_CENTER_KEY;
@@ -130,6 +142,53 @@ public class AbstractMetaServerIntegrated extends AbstractXPipeClusterTest {
                 }});
         return cac;
     }
-
-
+    
+    protected class CrdtRedisServer {
+        public int gid;
+        public RedisMeta meta;
+        public RedisStartCmd cmd;
+        public CrdtRedisServer(int gid, RedisMeta meta) {
+            this.gid = gid;
+            this.meta = meta;
+        }
+        public void start() {
+            if(cmd != null) return;
+            cmd = startCrdtRedis(gid, meta.getPort());
+        }
+        public boolean checkRunning(XpipeNettyClientKeyedObjectPool pool, ScheduledExecutorService scheduled) {
+            try {
+                return new PingCommand(pool.getKeyPool(new DefaultEndPoint(meta.getIp(), meta.getPort())),scheduled).execute().get().equals("PONG");
+            } catch (InterruptedException e) {
+                return false;
+            } catch (ExecutionException e) {
+                return false;
+            }
+        }
+        
+        public void peerof(CrdtRedisServer crdtRedisServer, XpipeNettyClientKeyedObjectPool pool, ScheduledExecutorService scheduled) {
+            new PeerOfCommand(pool.getKeyPool(new DefaultEndPoint(meta.getIp(), meta.getPort())), crdtRedisServer.gid, new DefaultEndPoint(crdtRedisServer.meta.getIp(), crdtRedisServer.meta.getPort()), scheduled).execute();
+        }
+        
+        public void stop() {
+            if(cmd == null) return;
+            cmd.killProcess();
+        }
+        
+        
+    }
+    
+    protected void startCrdtMasters(List<CrdtRedisServer> masters, XpipeNettyClientKeyedObjectPool pool, ScheduledExecutorService scheduled) throws TimeoutException {
+        int length = masters.size();
+        for(int i = 0; i < length; i++) {
+            masters.get(i).start();
+        }
+        for(int i = 0; i < length; i++) {
+            CrdtRedisServer master= masters.get(i);
+            waitConditionUntilTimeOut(()-> master.checkRunning(pool, scheduled), 5000, 100);
+            for(int j = 0; j < length; j++) {
+                if(i == j) return;
+                master.peerof(masters.get(j),  pool, scheduled);
+            }
+        }
+    }
 }

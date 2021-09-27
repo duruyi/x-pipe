@@ -321,7 +321,7 @@ public class AbstractMetaServerMultiDcTest extends AbstractMetaServerIntegrated 
         for(DcMeta dcMeta: getXpipeMeta().getDcs().values()) {
             String idc = dcMeta.getId();
             ConsoleInfo info = consoleInfos.get(idc);
-            waitConsole("127.0.0.1:" + info.console_port, idc, 12000);
+            waitConsole("127.0.0.1:" + info.console_port, idc, 32000);
             dcMeta.getMetaServers().stream().forEach(meta -> {
                 startMetaServer(idc, String.format("http://127.0.0.1:%d" , info.console_port),  dcMeta.getZkServer().getAddress(),  meta.getPort(), dcinfos);
             });

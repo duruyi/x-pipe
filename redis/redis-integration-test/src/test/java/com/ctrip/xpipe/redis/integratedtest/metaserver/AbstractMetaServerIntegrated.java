@@ -1,16 +1,14 @@
 package com.ctrip.xpipe.redis.integratedtest.metaserver;
 
-import com.ctrip.xpipe.api.pool.SimpleObjectPool;
 import com.ctrip.xpipe.codec.JsonCodec;
 import com.ctrip.xpipe.endpoint.DefaultEndPoint;
-import com.ctrip.xpipe.netty.commands.NettyClient;
 import com.ctrip.xpipe.pool.XpipeNettyClientKeyedObjectPool;
 import com.ctrip.xpipe.redis.checker.healthcheck.HealthChecker;
 import com.ctrip.xpipe.redis.core.entity.RedisMeta;
 import com.ctrip.xpipe.redis.core.protocal.cmd.PeerOfCommand;
 import com.ctrip.xpipe.redis.core.protocal.cmd.PingCommand;
 import com.ctrip.xpipe.redis.integratedtest.console.AbstractXPipeClusterTest;
-import com.ctrip.xpipe.redis.integratedtest.console.app.ConsoleApp;
+import com.ctrip.xpipe.redis.integratedtest.console.app.ConsoleSpringApp;
 import com.ctrip.xpipe.redis.integratedtest.console.cmd.RedisStartCmd;
 import com.ctrip.xpipe.redis.integratedtest.metaserver.proxy.LocalProxyConfig;
 import com.ctrip.xpipe.redis.integratedtest.metaserver.proxy.LocalResourceManager;
@@ -25,7 +23,6 @@ import com.ctrip.xpipe.redis.proxy.tunnel.TunnelManager;
 import com.ctrip.xpipe.spring.AbstractProfile;
 import com.ctrip.xpipe.zk.ZkTestServer;
 import com.google.common.collect.Maps;
-import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -110,7 +107,7 @@ public class AbstractMetaServerIntegrated extends AbstractXPipeClusterTest {
                                                                 Map<String, String> crossDcConsoles, Map<String, String> metaservers,
                                                                 Map<String, String> extras) {
 
-        ConfigurableApplicationContext cac = buildSpringContext(ConsoleApp.class, new HashMap<String, String>() {{
+        ConfigurableApplicationContext cac = buildSpringContext(ConsoleSpringApp.class, new HashMap<String, String>() {{
             put(HealthChecker.ENABLED, "true");
             put("server.port", String.valueOf(port));
             put(KEY_CONSOLE_ADDRESS, "http://" + localDcConsoles.get(0));

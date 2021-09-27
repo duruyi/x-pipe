@@ -1,7 +1,9 @@
 package com.ctrip.xpipe.redis.console.resources;
 
+import com.ctrip.xpipe.api.codec.Codec;
 import com.ctrip.xpipe.api.email.EmailResponse;
 import com.ctrip.xpipe.api.server.Server;
+import com.ctrip.xpipe.cluster.ClusterType;
 import com.ctrip.xpipe.config.DefaultConfig;
 import com.ctrip.xpipe.endpoint.ClusterShardHostPort;
 import com.ctrip.xpipe.endpoint.DefaultEndPoint;
@@ -16,10 +18,13 @@ import com.ctrip.xpipe.redis.checker.alert.AlertMessageEntity;
 import com.ctrip.xpipe.redis.checker.config.CheckerConfig;
 import com.ctrip.xpipe.redis.checker.healthcheck.RedisHealthCheckInstance;
 import com.ctrip.xpipe.redis.checker.healthcheck.RedisInstanceInfo;
+import com.ctrip.xpipe.redis.checker.healthcheck.config.DefaultHealthCheckConfig;
 import com.ctrip.xpipe.redis.checker.healthcheck.impl.DefaultRedisHealthCheckInstance;
 import com.ctrip.xpipe.redis.checker.healthcheck.impl.DefaultRedisInstanceInfo;
+import com.ctrip.xpipe.redis.checker.healthcheck.session.RedisSession;
 import com.ctrip.xpipe.redis.checker.resource.DefaultCheckerConsoleService;
 import com.ctrip.xpipe.redis.core.console.ConsoleCheckerPath;
+import com.ctrip.xpipe.redis.core.entity.RedisMeta;
 import com.ctrip.xpipe.redis.core.proxy.endpoint.DefaultProxyEndpoint;
 import com.ctrip.xpipe.retry.RetryPolicyFactories;
 import com.ctrip.xpipe.spring.RestTemplateFactory;
@@ -56,12 +61,12 @@ public class CheckerPersistenceCacheTest extends AbstractCheckerTest {
     PersistenceCache persistence;
 
     @Test
-    public void mockHttp() throws IOException, InterruptedException {
+    public void mockHttp() throws Exception {
         MockitoAnnotations.initMocks(this);
         webServer  = new MockWebServer();
         ObjectMapper objectMapper = new ObjectMapper();
         final CheckerConsoleService.AlertMessage[] acceptAlertMessage = new CheckerConsoleService.AlertMessage[1];
-        
+        final DefaultRedisInstanceInfo[]  instanceInfos = new DefaultRedisInstanceInfo[1];
         final Dispatcher dispatcher = new Dispatcher() {
 
             @Override
@@ -97,7 +102,15 @@ public class CheckerPersistenceCacheTest extends AbstractCheckerTest {
                             ioException.printStackTrace();
                         }
                         break;
-
+                    case ConsoleCheckerPath.PATH_PERSISTENCE + "updateRedisRole/master":
+                        try {
+                            String body = new String(request.getBody().readByteArray());
+                            instanceInfos[0] = objectMapper.readValue(body, DefaultRedisInstanceInfo.class);
+                            return new MockResponse().setResponseCode(200);
+                        } catch (IOException ioException) {
+                            ioException.printStackTrace();
+                        }
+                        break;
                 }
                 return new MockResponse().setResponseCode(404);
 
@@ -144,9 +157,47 @@ public class CheckerPersistenceCacheTest extends AbstractCheckerTest {
         checkerPersistenceCache.recordAlert(alertMessageEntity, response);
         Assert.assertEquals(acceptAlertMessage[0].getMessage().toString(), alertMessageEntity.toString());
         Assert.assertEquals(acceptAlertMessage[0].getEmailResponse().getProperties(), response.getProperties());
+
+        RedisMeta redisMeta = newRandomFakeRedisMeta().setPort(1000);
+        DefaultRedisInstanceInfo info = new DefaultRedisInstanceInfo(redisMeta.parent().parent().parent().getId(),
+                redisMeta.parent().parent().getId(), redisMeta.parent().getId(),
+                new HostPort(redisMeta.getIp(), redisMeta.getPort()),
+                redisMeta.parent().getActiveDc(), ClusterType.BI_DIRECTION);
+        DefaultRedisHealthCheckInstance instance = new DefaultRedisHealthCheckInstance();
+        instance.setInstanceInfo(info);
+        instance.setEndpoint(new DefaultEndPoint(info.getHostPort().getHost(), info.getHostPort().getPort()));
+        instance.setHealthCheckConfig(new DefaultHealthCheckConfig(buildCheckerConfig()));
+        instance.setSession(new RedisSession(instance.getEndpoint(), scheduled, getXpipeNettyClientKeyedObjectPool()));
+        checkerPersistenceCache.updateRedisRole(instance, Server.SERVER_ROLE.MASTER);
+        Assert.assertEquals(instanceInfos[0].getDcId(), info.getDcId());
+        Assert.assertEquals(instanceInfos[0].getHostPort(), info.getHostPort()); 
+        Assert.assertEquals(instanceInfos[0].getActiveDc(), info.getActiveDc());
+        Assert.assertEquals(instanceInfos[0].getShardId(), info.getShardId());
+        Assert.assertEquals(instanceInfos[0].getClusterId(), info.getClusterId());
+        Assert.assertEquals(instanceInfos[0].getClusterShardHostport(), info.getClusterShardHostport());
+        Assert.assertEquals(instanceInfos[0].getClusterType(), info.getClusterType());
     }
 
+    @Test
+    public void testDefaultRedisInstanceInfoJson() throws Exception {
+        RedisMeta redisMeta = newRandomFakeRedisMeta().setPort(1000);
+        DefaultRedisInstanceInfo info = new DefaultRedisInstanceInfo(redisMeta.parent().parent().parent().getId(),
+                redisMeta.parent().parent().getId(), redisMeta.parent().getId(),
+                new HostPort(redisMeta.getIp(), redisMeta.getPort()),
+                redisMeta.parent().getActiveDc(), ClusterType.BI_DIRECTION);
+        String json = Codec.DEFAULT.encode(info);
+        DefaultRedisInstanceInfo result = Codec.DEFAULT.decode(json, DefaultRedisInstanceInfo.class);
+        Assert.assertEquals(result.toString(), info.toString());
 
+    }
+
+    @Test
+    public void testAlertMessageEntityJson() {
+        AlertMessageEntity alertMessageEntity = new AlertMessageEntity("Test", "test", Lists.newArrayList("test-list"));
+        String json = Codec.DEFAULT.encode(alertMessageEntity);
+        AlertMessageEntity result = Codec.DEFAULT.decode(json, AlertMessageEntity.class);
+        Assert.assertEquals(result.toString(), alertMessageEntity.toString());
+    }
 
 }
 

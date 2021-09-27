@@ -58,7 +58,7 @@ public class AbstractConsoleDbTest extends AbstractConsoleTest {
     }
 
     @Before
-    public void before() throws ComponentLookupException, SQLException, IOException, TimeoutException {
+    public void before() throws Exception {
         setUpTestDataSource();
     }
 

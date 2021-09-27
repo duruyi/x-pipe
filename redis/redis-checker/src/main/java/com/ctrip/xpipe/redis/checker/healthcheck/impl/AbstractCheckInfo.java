@@ -15,6 +15,11 @@ public abstract class AbstractCheckInfo implements CheckInfo {
 
     protected ClusterType clusterType;
 
+    public AbstractCheckInfo() {
+
+    }
+
+
     public AbstractCheckInfo(String clusterId, String activeDc, ClusterType clusterType) {
         this.clusterId = clusterId;
         this.activeDc = activeDc;
@@ -38,5 +43,14 @@ public abstract class AbstractCheckInfo implements CheckInfo {
     public void setActiveDc(String activeDc) {
         this.activeDc = activeDc;
     }
+
+    public void setClusterId(String clusterId) {
+        this.clusterId = clusterId;
+    }
+
+    public void setClusterType(ClusterType clusterType) {
+        this.clusterType = clusterType;
+    }
+
 
 }

@@ -86,7 +86,7 @@ public abstract class AbstractXPipeClusterTest extends AbstractConsoleDbTest {
     }
 
     @Override
-    public void before() {
+    public void before() throws Exception {
         restTemplate = RestTemplateFactory.createRestTemplate();
         subProcessCmds = new ArrayList<>();
         redisPorts = new ArrayList<>();

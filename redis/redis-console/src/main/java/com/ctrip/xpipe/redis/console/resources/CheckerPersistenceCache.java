@@ -35,27 +35,27 @@ public class CheckerPersistenceCache extends AbstractPersistenceCache {
     }
 
     @Override
-    Set<String> doSentinelCheckWhiteList() {
+    public Set<String> doSentinelCheckWhiteList() {
         return service.sentinelCheckWhiteList(config.getConsoleAddress());
     }
 
     @Override
-    Set<String> doClusterAlertWhiteList() {
+    public Set<String> doClusterAlertWhiteList() {
         return service.clusterAlertWhiteList(config.getConsoleAddress());
     }
 
     @Override
-    boolean doIsSentinelAutoProcess() {
+    public boolean doIsSentinelAutoProcess() {
         return service.isSentinelAutoProcess(config.getConsoleAddress());
     }
 
     @Override
-    boolean doIsAlertSystemOn() {
+    public boolean doIsAlertSystemOn() {
         return service.isAlertSystemOn(config.getConsoleAddress());
     }
 
     @Override
-    Map<String, Date> doLoadAllClusterCreateTime() {
+    public Map<String, Date> doLoadAllClusterCreateTime() {
         return service.loadAllClusterCreateTime(config.getConsoleAddress());
     }
 }

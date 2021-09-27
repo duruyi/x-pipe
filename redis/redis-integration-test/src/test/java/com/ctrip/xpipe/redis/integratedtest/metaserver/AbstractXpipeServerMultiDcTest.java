@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 import static com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition.KEY_SERVER_MODE;
 import static com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition.SERVER_MODE.*;
 
-public class AbstractMetaServerMultiDcTest extends AbstractMetaServerIntegrated {
+public class AbstractXpipeServerMultiDcTest extends AbstractXpipeServerIntegrated {
     protected Map<String, String> metaservers = new HashMap<>();
     @Override
     protected String getXpipeMetaConfigFile() {
@@ -68,7 +68,7 @@ public class AbstractMetaServerMultiDcTest extends AbstractMetaServerIntegrated 
         return startSentinel(port);
     }
 
-    List<RedisStartCmd> startSentinels(SentinelMeta meta) {
+    protected List<RedisStartCmd> startSentinels(SentinelMeta meta) {
         String address = meta.getAddress();
         String[] ips = address.split(",");
         List<RedisStartCmd> results = new LinkedList<>();
@@ -135,15 +135,6 @@ public class AbstractMetaServerMultiDcTest extends AbstractMetaServerIntegrated 
 
     void waitConsole(String url, String idc, int wait_time) throws Exception {
         waitForServerAck(String.format("http://%s/api/dc/%s", url, idc), DcMeta.class, wait_time);
-    }
-
-    protected RedisMeta findMaster(List<RedisMeta> lists) {
-        for(RedisMeta r : lists) {
-            if(r.isMaster()) {
-                return r;
-            }
-        }
-        return null;
     }
 
     Endpoint parseEndpoint(String uri) {
@@ -299,16 +290,20 @@ public class AbstractMetaServerMultiDcTest extends AbstractMetaServerIntegrated 
             if(info != null && info.enable) {
                 switch (info.mode) {
                     case CONSOLE:
+                        logger.info("================= start console server ==================");
                         extraOptions.put(KEY_SERVER_MODE, CONSOLE.name());
                         startConsole(info.console_port, idc, dcMeta.getZkServer().getAddress(), Collections.singletonList(consoles.get(idc)), consoles, metaservers, extraOptions);
+                        logger.info("================= start checker server ==================");
                         checks.put(idc, new HealthServer("http://127.0.0.1:"+ info.checker_port + "/health" , startChecker(info.checker_port, idc, dcMeta.getZkServer().getAddress(), Collections.singletonList(String.format("127.0.0.1:" + info.console_port)))));
                         break;
                     case CONSOLE_CHECKER:
+                        logger.info("================= start console + checker server ==================");
                         extraOptions.put(KEY_SERVER_MODE, CONSOLE_CHECKER.name());
                         ServerStartCmd console_checker = startConsole(info.console_port, idc, dcMeta.getZkServer().getAddress(), Collections.singletonList(consoles.get(idc)), consoles, metaservers, extraOptions);
                         checks.put(idc, new HealthServer("http://127.0.0.1:" + info.console_port + "/health", console_checker));
                         break;
                     case CHECKER:
+                        logger.info("================= start checker server ==================");
                         checks.put(idc, new HealthServer("http://127.0.0.1:"+ info.checker_port + "/health" , startChecker(info.checker_port, idc, dcMeta.getZkServer().getAddress(), Collections.singletonList(String.format("127.0.0.1:" + info.console_port)))));
                         break;
 
@@ -321,7 +316,7 @@ public class AbstractMetaServerMultiDcTest extends AbstractMetaServerIntegrated 
         for(DcMeta dcMeta: getXpipeMeta().getDcs().values()) {
             String idc = dcMeta.getId();
             ConsoleInfo info = consoleInfos.get(idc);
-            waitConsole("127.0.0.1:" + info.console_port, idc, 32000);
+            waitConsole("127.0.0.1:" + info.console_port, idc, 12000);
             dcMeta.getMetaServers().stream().forEach(meta -> {
                 startMetaServer(idc, String.format("http://127.0.0.1:%d" , info.console_port),  dcMeta.getZkServer().getAddress(),  meta.getPort(), dcinfos);
             });

@@ -7,7 +7,7 @@ import com.ctrip.xpipe.pool.XpipeNettyClientKeyedObjectPool;
 import com.ctrip.xpipe.proxy.ProxyEnabledEndpoint;
 import com.ctrip.xpipe.redis.console.model.RouteModel;
 import com.ctrip.xpipe.redis.core.proxy.parser.DefaultProxyConnectProtocolParser;
-import com.ctrip.xpipe.redis.integratedtest.metaserver.AbstractMetaServerMultiDcTest;
+import com.ctrip.xpipe.redis.integratedtest.metaserver.AbstractXpipeServerMultiDcTest;
 import com.ctrip.xpipe.redis.integratedtest.metaserver.scenes.tools.ConsoleService;
 import com.ctrip.xpipe.redis.integratedtest.metaserver.scenes.tools.RedisChecker;
 import com.ctrip.xpipe.tuple.Pair;
@@ -25,7 +25,7 @@ import static com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition.SE
  *  peer proxy will change
  *  metaserver send peerof command
  */
-public class RouteChangeTest extends AbstractMetaServerMultiDcTest {
+public class RouteChangeTest extends AbstractXpipeServerMultiDcTest {
     public Map<String, ConsoleInfo> defaultConsoleInfo() {
         Map<String, ConsoleInfo> consoleInfos = new HashMap<>();
         //start console + checker 2server

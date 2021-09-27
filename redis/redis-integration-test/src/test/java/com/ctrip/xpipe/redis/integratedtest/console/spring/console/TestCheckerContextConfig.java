@@ -171,12 +171,12 @@ public class TestCheckerContextConfig {
                 crossMasterDelayManager, pingService, clusterHealthManager, serverPort);
     }
 
-//    @Bean(name = "ALLCHECKER")
-//    @Profile(AbstractProfile.PROFILE_NAME_PRODUCTION)
-//    public AllCheckerLeaderElector allCheckerLeaderElector() {
-//        return new AllCheckerLeaderElector();
-//    }
-//    
+    @Bean(name = "ALLCHECKER")
+    @Profile(AbstractProfile.PROFILE_NAME_PRODUCTION)
+    public AllCheckerLeaderElector allCheckerLeaderElector() {
+        return new AllCheckerLeaderElector();
+    }
+   
     @Bean
     public FoundationService foundationService() {
         return new TestFoundationService();

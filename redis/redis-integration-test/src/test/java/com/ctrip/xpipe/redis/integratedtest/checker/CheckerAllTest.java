@@ -5,9 +5,11 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        CheckerTest.class,
-        CheckCrdtRedisByProxy.class,
-        TwoChecker2SameConsole.class
+        TestAllCheckerLeader.class,
+        TwoChecker2SameConsole.class,
+        TestConsoleWeb.class,
+        TestAllCheckerLeader.class,
+        CheckCrdtRedisByProxy.class
 })
 public class CheckerAllTest {
 }

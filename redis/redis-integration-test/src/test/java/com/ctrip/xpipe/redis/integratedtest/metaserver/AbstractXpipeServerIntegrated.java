@@ -5,6 +5,8 @@ import com.ctrip.xpipe.endpoint.DefaultEndPoint;
 import com.ctrip.xpipe.pool.XpipeNettyClientKeyedObjectPool;
 import com.ctrip.xpipe.redis.checker.healthcheck.HealthChecker;
 import com.ctrip.xpipe.redis.core.entity.RedisMeta;
+import com.ctrip.xpipe.redis.core.entity.ShardMeta;
+import com.ctrip.xpipe.redis.core.entity.ZkServerMeta;
 import com.ctrip.xpipe.redis.core.protocal.cmd.PeerOfCommand;
 import com.ctrip.xpipe.redis.core.protocal.cmd.PingCommand;
 import com.ctrip.xpipe.redis.integratedtest.console.AbstractXPipeClusterTest;
@@ -21,11 +23,13 @@ import com.ctrip.xpipe.redis.proxy.resource.ResourceManager;
 import com.ctrip.xpipe.redis.proxy.tunnel.DefaultTunnelManager;
 import com.ctrip.xpipe.redis.proxy.tunnel.TunnelManager;
 import com.ctrip.xpipe.spring.AbstractProfile;
+import com.ctrip.xpipe.spring.RestTemplateFactory;
 import com.ctrip.xpipe.zk.ZkTestServer;
 import com.google.common.collect.Maps;
 import org.junit.After;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.web.client.RestOperations;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,12 +46,57 @@ import static com.ctrip.xpipe.redis.checker.cluster.AbstractCheckerLeaderElector
 import static com.ctrip.xpipe.redis.checker.config.CheckerConfig.*;
 import static com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition.KEY_SERVER_MODE;
 import static com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition.SERVER_MODE.CHECKER;
+import static com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition.SERVER_MODE.CONSOLE_CHECKER;
 import static com.ctrip.xpipe.redis.console.config.impl.DefaultConsoleConfig.KEY_METASERVERS;
 import static com.ctrip.xpipe.redis.core.config.AbstractCoreConfig.KEY_ZK_ADDRESS;
 
 
-public class AbstractMetaServerIntegrated extends AbstractXPipeClusterTest {
+public class AbstractXpipeServerIntegrated extends AbstractXPipeClusterTest {
 
+    protected final String JQ_IDC = "jq";
+    
+    protected final String OY_IDC = "oy";
+    
+    protected final String FRA_IDC = "fra";
+
+    protected final String crdtClusterName = "cluster1";
+
+    protected final String crdtShardName = "shard1";
+    
+    
+    /****  read meta ***/
+
+    protected RedisMeta findMaster(List<RedisMeta> lists) {
+        for(RedisMeta r : lists) {
+            if(r.isMaster()) {
+                return r;
+            }
+        }
+        return null;
+    }
+
+    protected ShardMeta getClusterMeta(String idc, String cluster, String shard) {
+        return getXpipeMeta().getDcs().get(idc).getClusters().get(cluster).getShards().get(shard);
+    }
+
+    protected RedisMeta getMasterRedis(String idc, String cluster, String shard) throws Exception {
+        ShardMeta shardMeta = getClusterMeta(idc, cluster, shard);
+        RedisMeta master = findMaster(shardMeta.getRedises());
+        if(master == null) {
+            return null;
+        }
+        return master;
+    }
+
+    protected ZkServerMeta getZk(String idc) {
+        return getXpipeMeta().getDcs().get(idc).getZkServer();
+    }
+    
+    /***  tools  ***/
+    
+    protected RestOperations restOperations = RestTemplateFactory.createCommonsHttpRestTemplate(1000, 1000, 1000, 15000);
+    
+    /** start server ***/
 
     protected ZkTestServer startZk(int zkPort) {
         try {
@@ -99,9 +148,23 @@ public class AbstractMetaServerIntegrated extends AbstractXPipeClusterTest {
     public void closeAllSpringCACs() {
         springCACs.forEach((name, cac) -> {
             cac.close();
+            while(cac.isActive()) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         });
     }
 
+    protected ConfigurableApplicationContext startSpingConsoleChecker(int port, String idc, String zk, List<String> localDcConsoles,
+                                                                      Map<String, String> crossDcConsoles, Map<String, String> metaservers,
+                                                                      Map<String, String> extras) {
+        Map<String, String> ex = new HashMap<>(extras);
+        ex.put(KEY_SERVER_MODE, CONSOLE_CHECKER.name());
+        return startSpringConsole(port, idc, zk, localDcConsoles, crossDcConsoles, metaservers, ex);
+    }
 
     protected ConfigurableApplicationContext startSpringConsole(int port, String idc, String zk, List<String> localDcConsoles,
                                                                 Map<String, String> crossDcConsoles, Map<String, String> metaservers,

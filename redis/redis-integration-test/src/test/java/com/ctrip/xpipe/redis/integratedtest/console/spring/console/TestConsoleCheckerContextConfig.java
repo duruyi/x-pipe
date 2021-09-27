@@ -1,6 +1,5 @@
 package com.ctrip.xpipe.redis.integratedtest.console.spring.console;
 
-import com.ctrip.xpipe.api.foundation.FoundationService;
 import com.ctrip.xpipe.redis.checker.PersistenceCache;
 import com.ctrip.xpipe.redis.checker.cluster.AllCheckerLeaderElector;
 import com.ctrip.xpipe.redis.checker.cluster.GroupCheckerLeaderElector;
@@ -18,8 +17,6 @@ import com.ctrip.xpipe.redis.console.service.DcClusterShardService;
 import com.ctrip.xpipe.redis.console.service.RedisInfoService;
 import com.ctrip.xpipe.redis.console.service.impl.AlertEventService;
 import com.ctrip.xpipe.redis.console.service.impl.DefaultRedisInfoService;
-import com.ctrip.xpipe.redis.console.spring.ConsoleContextConfig;
-import com.ctrip.xpipe.redis.integratedtest.console.config.TestFoundationService;
 import com.ctrip.xpipe.spring.AbstractProfile;
 import com.ctrip.xpipe.utils.XpipeThreadFactory;
 import org.springframework.beans.factory.annotation.Qualifier;

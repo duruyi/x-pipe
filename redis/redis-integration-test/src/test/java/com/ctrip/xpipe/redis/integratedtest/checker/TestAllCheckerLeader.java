@@ -15,22 +15,33 @@ import com.ctrip.xpipe.redis.checker.healthcheck.impl.DefaultRedisHealthCheckIns
 import com.ctrip.xpipe.redis.checker.healthcheck.impl.DefaultRedisInstanceInfo;
 import com.ctrip.xpipe.redis.checker.healthcheck.session.RedisSession;
 import com.ctrip.xpipe.redis.checker.resource.DefaultCheckerConsoleService;
+import com.ctrip.xpipe.redis.core.entity.DcMeta;
 import com.ctrip.xpipe.redis.core.entity.RedisMeta;
+import com.ctrip.xpipe.redis.core.entity.SentinelMeta;
+import com.ctrip.xpipe.redis.core.entity.ZkServerMeta;
 import com.ctrip.xpipe.redis.core.protocal.cmd.AbstractSentinelCommand;
-import com.ctrip.xpipe.redis.integratedtest.metaserver.AbstractMetaServerMultiDcTest;
+import com.ctrip.xpipe.redis.integratedtest.console.cmd.RedisStartCmd;
+import com.ctrip.xpipe.redis.integratedtest.metaserver.AbstractXpipeServerMultiDcTest;
 import com.google.common.collect.Lists;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.context.ConfigurableApplicationContext;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.TimeoutException;
 
+import static com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition.KEY_SERVER_MODE;
 import static com.ctrip.xpipe.redis.checker.spring.ConsoleServerModeCondition.SERVER_MODE.*;
+import static com.ctrip.xpipe.redis.console.config.impl.DefaultConsoleConfig.KEY_CLUSTER_SHARD_FOR_MIGRATE_SYS_CHECK;
 
-public class CheckerTest extends AbstractMetaServerMultiDcTest{
+public class TestAllCheckerLeader extends AbstractXpipeServerMultiDcTest {
+    
+    public String prepareDatas() throws IOException {
+        return prepareDatasFromFile("src/test/resources/xpipe-crdt-no-cluster.sql");
+    }
     public Map<String, ConsoleInfo> defaultConsoleInfo() {
         Map<String, ConsoleInfo> consoleInfos = new HashMap<>();
         //start console + checker 2server
@@ -46,22 +57,69 @@ public class CheckerTest extends AbstractMetaServerMultiDcTest{
     
     @Before
     public void testBefore() throws Exception {
-        startCRDTAllServer(defaultConsoleInfo());
+//        startCRDTAllServer(defaultConsoleInfo());
+        startDb();
         pool = getXpipeNettyClientKeyedObjectPool();
     }
-    
+
+    final String sentinelMaster = "will-remove-master-name";
+    final String localHost = "127.0.0.1";
+    final int localPort = 6379;
+    final int waitTime = 2000;
     @Test
     public void SentinelCheck() throws Exception {
-       testSentinel("jq", 5000);
-       testSentinel("oy", 17170);
-       testSentinel("fra", 32222);
+        
+        ZkServerMeta jqZk = getZk(JQ_IDC);
+        startZk(jqZk);
+
+        ZkServerMeta fraZk = getZk(FRA_IDC);
+        startZk(fraZk);
+
+        Map<Long, SentinelMeta> sentinel_metas = getXpipeMeta().getDcs().get(FRA_IDC).getSentinels();
+        sentinel_metas.entrySet().stream().forEach(sentinel_meta -> {
+            List<RedisStartCmd> sentinels = startSentinels(sentinel_meta.getValue());
+            for(RedisStartCmd sentinel: sentinels) {
+                try {
+                    waitConditionUntilTimeOut(() -> sentinel.isProcessAlive(), 1000);
+                } catch (TimeoutException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        
+        
+        int JQConsolePort = 18080;
+        int FRACheckerPort = 18082;
+        Map<String, String> consoles = new HashMap<>();
+        consoles.put("jq", "http://127.0.0.1:" + JQConsolePort);
+        consoles.put("fra", "http://127.0.0.1:" + JQConsolePort);
+        Map<String, String> metaServers = new HashMap<>();
+        Map<String, String> extraOptions = new HashMap<>();
+        extraOptions.put(KEY_CLUSTER_SHARD_FOR_MIGRATE_SYS_CHECK, "cluster-dr,cluster-dr-shard1");
+        extraOptions.put(KEY_SERVER_MODE, CONSOLE.name());
+        extraOptions.put("console.cluster.types", "one_way,bi_direction,ONE_WAY,BI_DIRECTION");
+        logger.info("========== start jq console ============");
+        startSpringConsole(JQConsolePort, JQ_IDC, jqZk.getAddress(), Collections.singletonList("127.0.0.1:" + JQConsolePort), consoles, metaServers, extraOptions);
+        
+        logger.info("========== start fra checker ============");
+        ConfigurableApplicationContext checker = startSpringChecker(FRACheckerPort, FRA_IDC, fraZk.getAddress(), Collections.singletonList("127.0.0.1:" + JQConsolePort), "127.0.0.3");
+
+        waitConditionUntilTimeOut(() -> {
+            Map<String, Object> healthInfo = restOperations.getForObject(String.format("http://%s:%d/health", localHost, JQConsolePort), Map.class);
+            return (boolean)healthInfo.get("isLeader");
+        }, 12000);
+        
+        
+        waitConditionUntilTimeOut(() -> {
+            return restOperations.getForObject(String.format("http://%s:%d/health", localHost, FRACheckerPort), Boolean.class);
+        }, 12000);
+
+        int fraSentinelPort = 32222;
+        testSentinel(FRA_IDC, fraSentinelPort, checker);
+        
     }
     
-    public void testSentinel(String idc, int sentinel_port) throws Exception {
-        final String sentinelMaster = "will-remove-master-name";
-        final String localHost = "127.0.0.1";
-        final int localPort = 6379;
-        final int waitTime = 2000;
+    public void testSentinel(String idc, int sentinel_port, ConfigurableApplicationContext checker) throws Exception {
         
         SimpleObjectPool<NettyClient> clientPool = pool.getKeyPool(new DefaultEndPoint(localHost, sentinel_port));
         String addResult = new AbstractSentinelCommand.SentinelAdd(clientPool, sentinelMaster, localHost, localPort, 3, scheduled).execute().get();
@@ -77,7 +135,7 @@ public class CheckerTest extends AbstractMetaServerMultiDcTest{
             }
             return port == null;
         }, waitTime, 1000);
-        closeCheck(idc);
+        checker.close();
         addResult = new AbstractSentinelCommand.SentinelAdd(clientPool, sentinelMaster, localHost, localPort, 3, scheduled).execute().get();
         master = new AbstractSentinelCommand.SentinelMaster(clientPool, scheduled, sentinelMaster).execute().get();
         Assert.assertEquals(master.getHost(), localHost);
@@ -88,43 +146,7 @@ public class CheckerTest extends AbstractMetaServerMultiDcTest{
         Assert.assertEquals(master.getPort(), localPort);
     }
 
-    @Test
-    public void testUrl() {
-        final String consoleUrl = "http://127.0.0.1:18080";
-        
-        CheckerConsoleService service = new DefaultCheckerConsoleService();
-        
-        
-        logger.info("------------------------------------");
-        logger.info("{}", service.clusterAlertWhiteList(consoleUrl));
-        logger.info("{}", service.getProxyTunnelInfos(consoleUrl));
-        logger.info("{}", service.loadAllClusterCreateTime(consoleUrl));
-        logger.info("{}", service.isSentinelAutoProcess(consoleUrl));
-        logger.info("{}", service.sentinelCheckWhiteList(consoleUrl));
-        logger.info("{}", service.getClusterCreateTime(consoleUrl, "cluster1"));
-        Assert.assertEquals(service.isAlertSystemOn(consoleUrl), true);
-        Assert.assertEquals(service.isClusterOnMigration(consoleUrl, "cluster1"), false);
-
-
-        RedisMeta redisMeta = newRandomFakeRedisMeta().setPort(1000);
-        DefaultRedisInstanceInfo info = new DefaultRedisInstanceInfo(redisMeta.parent().parent().parent().getId(),
-                redisMeta.parent().parent().getId(), redisMeta.parent().getId(),
-                new HostPort(redisMeta.getIp(), redisMeta.getPort()),
-                redisMeta.parent().getActiveDc(), ClusterType.BI_DIRECTION);
-        DefaultRedisHealthCheckInstance instance = new DefaultRedisHealthCheckInstance();
-        instance.setInstanceInfo(info);
-        instance.setEndpoint(new DefaultEndPoint(info.getHostPort().getHost(), info.getHostPort().getPort()));
-        instance.setHealthCheckConfig(new DefaultHealthCheckConfig(buildCheckerConfig()));
-        instance.setSession(new RedisSession(instance.getEndpoint(), scheduled, pool));
-        service.updateRedisRole( consoleUrl, instance, Server.SERVER_ROLE.SLAVE);
-
-        AlertMessageEntity alertMessageEntity = new AlertMessageEntity("Test", "test", Lists.newArrayList("test-list"));
-        service.recordAlert(consoleUrl,  alertMessageEntity,  () -> {
-            Properties properties = new Properties();
-            properties.setProperty("h", "t");
-            return properties;
-        });
-    }
+    
     
     @After
     public void testAfter() throws Exception {

@@ -74,7 +74,7 @@ public class CheckCrdtRedisByProxy extends AbstractXpipeServerMultiDcTest {
     }
     
     @Test
-    public void checkHelath() throws Exception {
+    public void checkHealth() throws Exception {
         waitConditionUntilTimeOut(() -> {
             Map<String, Map<HostPort, Object>> result = restOperations.getForObject("http://" + LOCAL_HOST + ":" + consolePort + "/console/cross-master/delay/bi_direction/" + JQ_IDC + "/cluster1/shard1", Map.class);
             if(result == null || result.get(FRA_IDC) == null || result.get(FRA_IDC).size() == 0) return false;

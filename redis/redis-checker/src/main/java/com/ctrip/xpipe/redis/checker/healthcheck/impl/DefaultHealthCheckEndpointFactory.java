@@ -114,7 +114,7 @@ public class DefaultHealthCheckEndpointFactory implements HealthCheckEndpointFac
     private final String PROXY_DOWN_EVENT = "proxy.client.down";
     @PostConstruct
     public void postConstruct() {
-        ProxyRegistry.setCheckerOptions(proxyChecker::check, proxyChecker::getRetryUpTimes, proxyChecker::getRetryDownTimes);
+        ProxyRegistry.setChecker(proxyChecker::check, proxyChecker::getRetryUpTimes, proxyChecker::getRetryDownTimes);
         ProxyRegistry.onProxyUp(proxyInetSocketAddress ->  {
             logger.info("[proxy-client][up] {}", proxyInetSocketAddress.toString());
             EventMonitor.DEFAULT.logEvent(PROXY_UP_EVENT, proxyInetSocketAddress.toString());

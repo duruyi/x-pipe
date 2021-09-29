@@ -31,7 +31,7 @@ public class ProxyRegistry {
         return ProxyUtil.getInstance().get(new InetSocketAddress(ip, port));
     }
     
-    public static void setCheckerOptions(
+    public static void setChecker(
             Function<InetSocketAddress, CompletableFuture<Boolean>> check
             , Supplier<Integer> getRetryUpTimes
             , Supplier<Integer> getRetryDownTimes) {

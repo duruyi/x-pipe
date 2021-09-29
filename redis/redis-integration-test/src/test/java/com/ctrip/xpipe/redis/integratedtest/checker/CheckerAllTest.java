@@ -5,7 +5,6 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        TestAllCheckerLeader.class,
         TwoChecker2SameConsole.class,
         TestConsoleWeb.class,
         TestAllCheckerLeader.class,

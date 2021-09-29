@@ -48,6 +48,7 @@ do
     #echo $port
     mkdir -p redis/$port/data
     touch redis/$port/redis.conf
+    chmod 777 redis/$port/redis.conf
 
     tee redis/$port/redis.conf << EOF
     loglevel debug
@@ -84,6 +85,7 @@ elif [ "$1" == "console-proxy" ]; then
   COMPOSE_FILE=docker-compose-console-proxy.yml
   echo $COMPOSE_FILE
 fi
+
 
 #docker-compose build -f $COMPOSE_FILE
 docker-compose -f $COMPOSE_FILE up  -d --build

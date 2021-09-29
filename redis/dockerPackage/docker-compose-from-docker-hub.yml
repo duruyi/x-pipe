@@ -177,7 +177,10 @@ services:
     restart: always
     ports:
       - 6379:6379
-    command: redis-server
+    volumes:
+      - ./redis/6379/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./redis/6379/data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
     networks:
       default:
         ipv4_address: 172.19.0.10
@@ -188,7 +191,10 @@ services:
     restart: always
     ports:
       - 6479:6379
-    command: redis-server --slaveof 172.19.0.10 6379
+    volumes:
+      - ./redis/6479/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./redis/6479/data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
     networks:
       default:
         ipv4_address: 172.19.0.11
@@ -199,7 +205,10 @@ services:
     restart: always
     ports:
       - 6579:6379
-    command: redis-server
+    volumes:
+      - ./redis/6579/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./redis/6579/data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
     networks:
       default:
         ipv4_address: 172.19.0.12
@@ -210,7 +219,10 @@ services:
     restart: always
     ports:
       - 6679:6379
-    command: redis-server
+    volumes:
+      - ./redis/6679/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./redis/6679/data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
     networks:
       default:
         ipv4_address: 172.19.0.13
@@ -221,7 +233,10 @@ services:
     restart: always
     ports:
       - 7379:6379
-    command: redis-server
+    volumes:
+      - ./redis/7379/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./redis/7379/data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
     networks:
       default:
         ipv4_address: 172.19.0.14
@@ -230,9 +245,12 @@ services:
     image: redis:4.0
     container_name: redis-7479
     restart: always
+    volumes:
+      - ./redis/7479/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./redis/7479/data:/data
     ports:
       - 7479:6379
-    command: redis-server --slaveof 172.19.0.14 6379
+    command: redis-server /usr/local/etc/redis/redis.conf
     networks:
       default:
         ipv4_address: 172.19.0.15
@@ -243,7 +261,10 @@ services:
     restart: always
     ports:
       - 7579:6379
-    command: redis-server
+    volumes:
+      - ./redis/7579/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./redis/7579/data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
     networks:
       default:
         ipv4_address: 172.19.0.16
@@ -254,7 +275,10 @@ services:
     restart: always
     ports:
       - 7679:6379
-    command: redis-server
+    volumes:
+      - ./redis/7679/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./redis/7679/data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
     networks:
       default:
         ipv4_address: 172.19.0.17

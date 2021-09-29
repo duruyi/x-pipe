@@ -40,7 +40,7 @@ if [ -f docker-compose.yml ];then
     rm -fr docker-compose.yml
 fi
 
-curl -sSL https://raw.githubusercontent.com/crtripcorp/x-pipe/docker_build/redis/dockerPackage/docker-compose-from-docker-hub.yml > docker-compose.yml
+curl -sSL https://raw.githubusercontent.com/ctripcorp/x-pipe/docker_build/redis/dockerPackage/docker-compose-from-docker-hub.yml > docker-compose.yml
 docker-compose up -d
 
 

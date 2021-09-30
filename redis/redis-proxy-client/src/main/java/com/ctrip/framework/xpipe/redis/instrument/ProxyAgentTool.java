@@ -67,13 +67,6 @@ public class ProxyAgentTool {
 
             CodeSource src = AgentMain.class.getProtectionDomain().getCodeSource();
             URL url = src.getLocation();
-            if(Pattern.matches(".*/redis-proxy-client/target/classes/", url.toString())) {
-                url = findProxyClientJar(url.getPath() + "../");
-                if(url == null) {
-                    throw new RuntimeException("not find proxy-client.jar, please `cd redis/redis-proxy` run `mvn install`");
-                }
-                url.getProtocol();
-            }
             URI uri = url.toURI();
             String protocol = uri.toString();
             String proxyFile;

@@ -41,6 +41,11 @@ if [ -f docker-compose.yml ];then
 fi
 
 curl -sSL https://raw.githubusercontent.com/ctripcorp/x-pipe/docker_build/redis/dockerPackage/docker-compose-from-docker-hub.yml > docker-compose.yml
+
+if [ -n "$1" ];then
+  sed -i "s#:1.0#:$1#g" docker-compose.yml
+fi
+
 docker-compose up -d --no-recreate
 
 

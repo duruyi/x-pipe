@@ -41,7 +41,7 @@ if [ -f docker-compose.yml ];then
 fi
 
 curl -sSL https://raw.githubusercontent.com/ctripcorp/x-pipe/docker_build/redis/dockerPackage/docker-compose-from-docker-hub.yml > docker-compose.yml
-docker-compose up -d
+docker-compose up -d --no-recreate
 
 
 

@@ -75,17 +75,12 @@ done
 
 if [ "$1" == "console-checker" ];then
   echo "console-checker mode"
-#  cp docker-compose-console-checker.yml docker-compose.yml
   COMPOSE_FILE=docker-compose-console-checker.yml
   echo $COMPOSE_FILE
 elif [ "$1" == "console-proxy" ]; then
   echo "console-proxy mode"
-#  cp docker-compose-console-proxy.yml docker-compose.yml
-#  cp xpipe-console/sql/init_data_console_proxy.sql mysql/sql/init_data.sql
   COMPOSE_FILE=docker-compose-console-proxy.yml
   echo $COMPOSE_FILE
 fi
 
-
-#docker-compose build -f $COMPOSE_FILE
-docker-compose -f $COMPOSE_FILE up  -d --build
+docker-compose -f $COMPOSE_FILE up  -d --build --no-recreate
